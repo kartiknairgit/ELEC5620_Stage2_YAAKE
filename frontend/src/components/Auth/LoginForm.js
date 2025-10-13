@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { authAPI } from '../../services/api';
 import AuthLayout from './AuthLayout';
 import OAuthButtons from './OAuthButtons';
+import LoadingTransition from '../LoadingTransition';
 
 const LoginForm = () => {
   const navigate = useNavigate();
@@ -13,6 +14,7 @@ const LoginForm = () => {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState('');
+  const [showLoadingTransition, setShowLoadingTransition] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -67,8 +69,8 @@ const LoginForm = () => {
         localStorage.setItem('yaake_token', response.data.token);
         localStorage.setItem('yaake_user', JSON.stringify(response.data.user));
 
-        // Navigate to dashboard or home
-        navigate('/dashboard');
+        // Show loading transition before navigating
+        setShowLoadingTransition(true);
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -81,6 +83,14 @@ const LoginForm = () => {
     }
   };
 
+  const handleTransitionComplete = () => {
+    navigate('/landing');
+  };
+
+  if (showLoadingTransition) {
+    return <LoadingTransition onComplete={handleTransitionComplete} />;
+  }
+
   return (
     <AuthLayout
       title="Welcome Back"
@@ -89,7 +99,11 @@ const LoginForm = () => {
       <form onSubmit={handleSubmit} className="login-form">
         {apiError && (
           <div className="error-banner">
-            {apiError}
+            <span className="error-icon">⚠️</span>
+            <div className="error-content">
+              <strong>Authentication Failed</strong>
+              <p>{apiError}</p>
+            </div>
           </div>
         )}
 
@@ -157,14 +171,46 @@ const LoginForm = () => {
         }
 
         .error-banner {
-          padding: 14px 18px;
-          background-color: #FEE2E2;
-          border-left: 4px solid #DC2626;
-          border-radius: 10px;
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+          padding: 16px 18px;
+          background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%);
+          border: 2px solid #DC2626;
+          border-radius: 12px;
           color: #991B1B;
-          font-size: 14px;
           margin-bottom: 24px;
-          animation: slideIn 0.3s ease;
+          animation: shake 0.5s ease, slideIn 0.3s ease;
+          box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
+        }
+
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+          20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        .error-icon {
+          font-size: 20px;
+          flex-shrink: 0;
+        }
+
+        .error-content {
+          flex: 1;
+        }
+
+        .error-content strong {
+          display: block;
+          font-size: 14px;
+          font-weight: 700;
+          margin-bottom: 4px;
+          color: #7F1D1D;
+        }
+
+        .error-content p {
+          margin: 0;
+          font-size: 13px;
+          line-height: 1.5;
         }
 
         @keyframes slideIn {

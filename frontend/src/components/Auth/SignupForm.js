@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { authAPI } from '../../services/api';
 import AuthLayout from './AuthLayout';
 import OAuthButtons from './OAuthButtons';
+import LoadingTransition from '../LoadingTransition';
 
 const SignupForm = () => {
   const navigate = useNavigate();
@@ -15,6 +16,36 @@ const SignupForm = () => {
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [showLoadingTransition, setShowLoadingTransition] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState({ level: 0, text: '', color: '' });
+
+  const calculatePasswordStrength = (password) => {
+    if (!password) {
+      return { level: 0, text: '', color: '' };
+    }
+
+    let strength = 0;
+    const checks = {
+      length: password.length >= 8,
+      lowercase: /[a-z]/.test(password),
+      uppercase: /[A-Z]/.test(password),
+      number: /\d/.test(password),
+      special: /[@$!%*?&]/.test(password)
+    };
+
+    strength = Object.values(checks).filter(Boolean).length;
+
+    const strengthLevels = {
+      0: { text: '', color: '', level: 0 },
+      1: { text: 'Very Weak', color: '#DC2626', level: 20 },
+      2: { text: 'Weak', color: '#F59E0B', level: 40 },
+      3: { text: 'Fair', color: '#F59E0B', level: 60 },
+      4: { text: 'Good', color: '#10B981', level: 80 },
+      5: { text: 'Strong', color: '#059669', level: 100 }
+    };
+
+    return strengthLevels[strength];
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -22,6 +53,12 @@ const SignupForm = () => {
       ...prev,
       [name]: value
     }));
+
+    // Calculate password strength for password field
+    if (name === 'password') {
+      setPasswordStrength(calculatePasswordStrength(value));
+    }
+
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
@@ -91,15 +128,15 @@ const SignupForm = () => {
         localStorage.setItem('yaake_token', response.data.token);
         localStorage.setItem('yaake_user', JSON.stringify(response.data.user));
 
-        // Show success message
+        // Show success message briefly before transition
         setSuccessMessage(
           'Account created successfully! Please check your email to verify your account.'
         );
 
-        // Redirect after 3 seconds
+        // Show loading transition after brief delay
         setTimeout(() => {
-          navigate('/dashboard');
-        }, 3000);
+          setShowLoadingTransition(true);
+        }, 2000);
       }
     } catch (error) {
       console.error('Registration error:', error);
@@ -122,6 +159,14 @@ const SignupForm = () => {
     }
   };
 
+  const handleTransitionComplete = () => {
+    navigate('/landing');
+  };
+
+  if (showLoadingTransition) {
+    return <LoadingTransition onComplete={handleTransitionComplete} />;
+  }
+
   return (
     <AuthLayout
       title="Create Account"
@@ -130,13 +175,21 @@ const SignupForm = () => {
       <form onSubmit={handleSubmit} className="signup-form">
         {apiError && (
           <div className="error-banner">
-            {apiError}
+            <span className="error-icon">⚠️</span>
+            <div className="error-content">
+              <strong>Registration Failed</strong>
+              <p>{apiError}</p>
+            </div>
           </div>
         )}
 
         {successMessage && (
           <div className="success-banner">
-            {successMessage}
+            <span className="success-icon">✓</span>
+            <div className="success-content">
+              <strong>Success!</strong>
+              <p>{successMessage}</p>
+            </div>
           </div>
         )}
 
@@ -176,6 +229,27 @@ const SignupForm = () => {
           {errors.password && (
             <span className="error-text">{errors.password}</span>
           )}
+
+          {formData.password && (
+            <div className="password-strength">
+              <div className="strength-bar-container">
+                <div
+                  className="strength-bar-fill"
+                  style={{
+                    width: `${passwordStrength.level}%`,
+                    backgroundColor: passwordStrength.color
+                  }}
+                ></div>
+              </div>
+              <span
+                className="strength-text"
+                style={{ color: passwordStrength.color }}
+              >
+                {passwordStrength.text}
+              </span>
+            </div>
+          )}
+
           <span className="helper-text">
             Must be 8+ characters with uppercase, lowercase, number, and special character
           </span>
@@ -226,25 +300,79 @@ const SignupForm = () => {
         }
 
         .error-banner {
-          padding: 14px 18px;
-          background-color: #FEE2E2;
-          border-left: 4px solid #DC2626;
-          border-radius: 10px;
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+          padding: 16px 18px;
+          background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%);
+          border: 2px solid #DC2626;
+          border-radius: 12px;
           color: #991B1B;
-          font-size: 14px;
           margin-bottom: 24px;
-          animation: slideIn 0.3s ease;
+          animation: shake 0.5s ease, slideIn 0.3s ease;
+          box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
         }
 
         .success-banner {
-          padding: 14px 18px;
-          background-color: #D1FAE5;
-          border-left: 4px solid #10B981;
-          border-radius: 10px;
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+          padding: 16px 18px;
+          background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%);
+          border: 2px solid #10B981;
+          border-radius: 12px;
           color: #065F46;
-          font-size: 14px;
           margin-bottom: 24px;
           animation: slideIn 0.3s ease;
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+        }
+
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+          20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        .error-icon, .success-icon {
+          font-size: 20px;
+          flex-shrink: 0;
+          width: 24px;
+          height: 24px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .success-icon {
+          background-color: #10B981;
+          color: white;
+          border-radius: 50%;
+          font-weight: bold;
+        }
+
+        .error-content, .success-content {
+          flex: 1;
+        }
+
+        .error-content strong, .success-content strong {
+          display: block;
+          font-size: 14px;
+          font-weight: 700;
+          margin-bottom: 4px;
+        }
+
+        .error-content strong {
+          color: #7F1D1D;
+        }
+
+        .success-content strong {
+          color: #065F46;
+        }
+
+        .error-content p, .success-content p {
+          margin: 0;
+          font-size: 13px;
+          line-height: 1.5;
         }
 
         @keyframes slideIn {
@@ -320,6 +448,35 @@ const SignupForm = () => {
           font-size: 12px;
           color: #8B7E74;
           font-style: italic;
+        }
+
+        .password-strength {
+          margin-top: 12px;
+          margin-bottom: 8px;
+        }
+
+        .strength-bar-container {
+          width: 100%;
+          height: 6px;
+          background-color: #E5DDD1;
+          border-radius: 10px;
+          overflow: hidden;
+          margin-bottom: 8px;
+        }
+
+        .strength-bar-fill {
+          height: 100%;
+          border-radius: 10px;
+          transition: all 0.3s ease;
+          box-shadow: 0 0 8px currentColor;
+        }
+
+        .strength-text {
+          font-size: 13px;
+          font-weight: 600;
+          display: block;
+          text-align: right;
+          transition: color 0.3s ease;
         }
 
         .submit-button {
