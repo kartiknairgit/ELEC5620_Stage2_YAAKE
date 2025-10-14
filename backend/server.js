@@ -9,7 +9,8 @@ const path = require('path');
 require('dotenv').config();
 
 const authRoutes = require('./routes/authRoutes');
-const UserModel = require('./models/userModel');
+const UserController = require('./controllers/userController');
+const dbService = require('./services/db.service');
 
 // Initialize Express app
 const app = express();
@@ -66,8 +67,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Initialize super user
-UserModel.initializeSuperUser();
+// Note: super user is initialized after DB connect via UserController.initializeSuperUser()
 
 // Server configuration
 const PORT = process.env.PORT || 5000;
@@ -125,9 +125,22 @@ const startServer = () => {
   }
 };
 
-// Start the server
-startServer();
-
+// Connect to DB then start the server
+dbService.connect()
+  .then(() => {
+    // Initialize super user after DB is ready (controller handles creation)
+    UserController.initializeSuperUser()
+      .then(() => startServer())
+      .catch((err) => {
+        console.error('Failed to initialize super user:', err);
+        process.exit(1);
+      });
+  })
+  .catch((err) => {
+    console.error('Failed to connect to MongoDB. Server not started.');
+    console.error(err);
+    process.exit(1);
+  });
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
   console.error('Unhandled Promise Rejection:', err);
