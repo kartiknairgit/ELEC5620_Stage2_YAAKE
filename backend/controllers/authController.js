@@ -1,13 +1,13 @@
-const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
-const { validationResult } = require('express-validator');
-const UserModel = require('../models/userModel');
-const { sendVerificationEmail, sendWelcomeEmail } = require('../utils/emailService');
+const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
+const { validationResult } = require("express-validator");
+const UserController = require("./userController");
+const { sendVerificationEmail, sendWelcomeEmail } = require("../utils/emailService");
 
 // Generate JWT Token
 const generateToken = (userId) => {
   return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRE || '24h'
+    expiresIn: process.env.JWT_EXPIRE || "24h",
   });
 };
 
@@ -21,50 +21,51 @@ const register = async (req, res) => {
     if (!errors.isEmpty()) {
       return res.status(400).json({
         success: false,
-        message: 'Validation failed',
-        errors: errors.array()
+        message: "Validation failed",
+        errors: errors.array(),
       });
     }
 
     const { email, password } = req.body;
 
     // FR4: Check if user already exists (duplicate email handling)
-    const existingUser = await UserModel.findByEmail(email);
+    const existingUser = await UserController.findByEmail(email);
     if (existingUser) {
       return res.status(400).json({
         success: false,
-        message: 'User with this email already exists'
+        message: "User with this email already exists",
       });
     }
 
     // Create new user (FR3: pending verification status)
-    const user = await UserModel.create(email, password, false, 'user');
-
+    const user = await UserController.create(email, password, false, "applicant");
     // FR3: Generate verification token
-    const verificationToken = crypto.randomBytes(32).toString('hex');
-    await UserModel.setVerificationToken(user.id, verificationToken);
+
+    console.log('Newly created user:', user);
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    await UserController.setVerificationToken(user._id || user.id, verificationToken);
 
     // FR3: Send verification email (SMTP placeholder)
     const emailResult = await sendVerificationEmail(email, verificationToken);
 
     // Generate JWT token
-    const token = generateToken(user.id);
+    const token = generateToken(user.email);
 
     res.status(201).json({
       success: true,
-      message: 'User registered successfully. Please check your email to verify your account.',
+      message: "User registered successfully. Please check your email to verify your account.",
       data: {
         user: user.toJSON(),
         token,
-        emailSent: emailResult.success
-      }
+        emailSent: emailResult.success,
+      },
     });
   } catch (error) {
-    console.error('Registration error:', error);
+    console.error("Registration error:", error);
     res.status(500).json({
       success: false,
-      message: 'Server error during registration',
-      error: error.message
+      message: "Server error during registration",
+      error: error.message,
     });
   }
 };
@@ -79,19 +80,20 @@ const login = async (req, res) => {
     if (!errors.isEmpty()) {
       return res.status(400).json({
         success: false,
-        message: 'Validation failed',
-        errors: errors.array()
+        message: "Validation failed",
+        errors: errors.array(),
       });
     }
 
     const { email, password } = req.body;
 
     // Find user by email
-    const user = await UserModel.findByEmail(email);
+    const user = await UserController.findByEmail(email);
+    
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid email or password'
+        message: "Invalid email or password",
       });
     }
 
@@ -100,27 +102,27 @@ const login = async (req, res) => {
     if (!isPasswordValid) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid email or password'
+        message: "Invalid email or password",
       });
     }
 
     // Generate JWT token
-    const token = generateToken(user.id);
+    const token = generateToken(user._id || user.id);
 
     res.status(200).json({
       success: true,
-      message: 'Login successful',
+      message: "Login successful",
       data: {
         user: user.toJSON(),
-        token
-      }
+        token,
+      },
     });
   } catch (error) {
-    console.error('Login error:', error);
+    console.error("Login error:", error);
     res.status(500).json({
       success: false,
-      message: 'Server error during login',
-      error: error.message
+      message: "Server error during login",
+      error: error.message,
     });
   }
 };
@@ -133,19 +135,19 @@ const verifyEmail = async (req, res) => {
     const { token } = req.params;
 
     // Find user by verification token
-    const user = await UserModel.findByVerificationToken(token);
+    const user = await UserController.findByVerificationToken(token);
 
     if (!user) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid or expired verification token'
+        message: "Invalid or expired verification token",
       });
     }
 
     // Update user verification status
-    await UserModel.update(user.id, {
+    await UserController.update(user._id || user.id, {
       isVerified: true,
-      verificationToken: null
+      verificationToken: null,
     });
 
     // Send welcome email
@@ -153,14 +155,14 @@ const verifyEmail = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'Email verified successfully'
+      message: "Email verified successfully",
     });
   } catch (error) {
-    console.error('Email verification error:', error);
+    console.error("Email verification error:", error);
     res.status(500).json({
       success: false,
-      message: 'Server error during email verification',
-      error: error.message
+      message: "Server error during email verification",
+      error: error.message,
     });
   }
 };
@@ -173,12 +175,12 @@ const resendVerification = async (req, res) => {
     const { email } = req.body;
 
     // Find user by email
-    const user = await UserModel.findByEmail(email);
+    const user = await UserController.findByEmail(email);
 
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: "User not found",
       });
     }
 
@@ -186,28 +188,28 @@ const resendVerification = async (req, res) => {
     if (user.isVerified) {
       return res.status(400).json({
         success: false,
-        message: 'Email is already verified'
+        message: "Email is already verified",
       });
     }
 
     // Generate new verification token
-    const verificationToken = crypto.randomBytes(32).toString('hex');
-    await UserModel.setVerificationToken(user.id, verificationToken);
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    await UserController.setVerificationToken(user._id || user.id, verificationToken);
 
     // Send verification email
     const emailResult = await sendVerificationEmail(email, verificationToken);
 
     res.status(200).json({
       success: true,
-      message: 'Verification email sent successfully',
-      emailSent: emailResult.success
+      message: "Verification email sent successfully",
+      emailSent: emailResult.success,
     });
   } catch (error) {
-    console.error('Resend verification error:', error);
+    console.error("Resend verification error:", error);
     res.status(500).json({
       success: false,
-      message: 'Server error while resending verification email',
-      error: error.message
+      message: "Server error while resending verification email",
+      error: error.message,
     });
   }
 };
@@ -217,27 +219,27 @@ const resendVerification = async (req, res) => {
 // @access  Private
 const getMe = async (req, res) => {
   try {
-    const user = await UserModel.findById(req.user.id);
+    const user = await UserController.findById(req.user.id);
 
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: "User not found",
       });
     }
 
     res.status(200).json({
       success: true,
       data: {
-        user: user.toJSON()
-      }
+        user: user.toJSON(),
+      },
     });
   } catch (error) {
-    console.error('Get user profile error:', error);
+    console.error("Get user profile error:", error);
     res.status(500).json({
       success: false,
-      message: 'Server error while fetching user profile',
-      error: error.message
+      message: "Server error while fetching user profile",
+      error: error.message,
     });
   }
 };
@@ -249,14 +251,14 @@ const logout = async (req, res) => {
   try {
     res.status(200).json({
       success: true,
-      message: 'Logout successful. Please remove the token from client storage.'
+      message: "Logout successful. Please remove the token from client storage.",
     });
   } catch (error) {
-    console.error('Logout error:', error);
+    console.error("Logout error:", error);
     res.status(500).json({
       success: false,
-      message: 'Server error during logout',
-      error: error.message
+      message: "Server error during logout",
+      error: error.message,
     });
   }
 };
@@ -267,7 +269,7 @@ const logout = async (req, res) => {
 const googleOAuth = async (req, res) => {
   res.status(501).json({
     success: false,
-    message: 'Google OAuth integration is not yet implemented. This is a placeholder for future development.'
+    message: "Google OAuth integration is not yet implemented. This is a placeholder for future development.",
   });
 };
 
@@ -277,7 +279,7 @@ const googleOAuth = async (req, res) => {
 const googleOAuthCallback = async (req, res) => {
   res.status(501).json({
     success: false,
-    message: 'Google OAuth callback is not yet implemented. This is a placeholder for future development.'
+    message: "Google OAuth callback is not yet implemented. This is a placeholder for future development.",
   });
 };
 
@@ -287,7 +289,7 @@ const googleOAuthCallback = async (req, res) => {
 const githubOAuth = async (req, res) => {
   res.status(501).json({
     success: false,
-    message: 'GitHub OAuth integration is not yet implemented. This is a placeholder for future development.'
+    message: "GitHub OAuth integration is not yet implemented. This is a placeholder for future development.",
   });
 };
 
@@ -297,7 +299,7 @@ const githubOAuth = async (req, res) => {
 const githubOAuthCallback = async (req, res) => {
   res.status(501).json({
     success: false,
-    message: 'GitHub OAuth callback is not yet implemented. This is a placeholder for future development.'
+    message: "GitHub OAuth callback is not yet implemented. This is a placeholder for future development.",
   });
 };
 
@@ -311,5 +313,5 @@ module.exports = {
   googleOAuth,
   googleOAuthCallback,
   githubOAuth,
-  githubOAuthCallback
+  githubOAuthCallback,
 };
