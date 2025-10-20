@@ -9,6 +9,7 @@ const path = require('path');
 require('dotenv').config();
 
 const authRoutes = require('./routes/authRoutes');
+const resumeroutes = require("./routes/resumeRoutes")
 const UserController = require('./controllers/userController');
 const dbService = require('./services/db.service');
 
@@ -39,6 +40,7 @@ app.use('/api/', limiter);
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use("/api/resume", resumeroutes)
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
