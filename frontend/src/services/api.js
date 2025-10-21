@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // API base URL
-const API_BASE_URL = 'http://localhost:5001/api';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api';
 
 // Create axios instance
 const api = axios.create({
@@ -9,7 +9,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json'
   },
-  timeout: 10000 // 10 seconds timeout
+  timeout: 20000 // 20 seconds timeout
 });
 
 // Request interceptor - add token to requests
@@ -88,6 +88,38 @@ export const authAPI = {
   logout: async () => {
     const response = await api.post('/auth/logout');
     return response.data;
+  }
+};
+
+// File upload API
+export const filesAPI = {
+  uploadResume: async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post('/files/resume', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return response.data;
+  }
+};
+
+// Cover letters API
+export const coverLettersAPI = {
+  generate: async (payload) => {
+    const response = await api.post('/cover-letters/generate', payload);
+    return response.data;
+  },
+  refine: async (payload) => {
+    const response = await api.post('/cover-letters/refine', payload);
+    return response.data;
+  }
+};
+
+// Export API
+export const exportAPI = {
+  coverLetter: async ({ draftText, title, format = 'docx', download = true }) => {
+    const response = await api.post('/export/cover-letter', { draftText, title, format, download }, { responseType: 'blob' });
+    return response;
   }
 };
 
