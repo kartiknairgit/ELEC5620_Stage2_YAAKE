@@ -3,12 +3,14 @@
 
 const fs = require('fs');
 const path = require('path');
-const pdfParse = require('pdf-parse');
+const { PDFParse } = require('pdf-parse');
 const mammoth = require('mammoth');
 const { GoogleGenAI } = require('@google/genai');
 require('dotenv').config();
 
-const genAI = new GoogleGenAI(process.env.GEMINI_API_KEY);
+const genAI = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY
+});
 
 class ResumeService {
   constructor() {
@@ -22,9 +24,10 @@ class ResumeService {
     try {
       console.log('📄 Reading PDF file...');
       const dataBuffer = fs.readFileSync(filePath);
-      const data = await pdfParse(dataBuffer);
-      console.log(`✅ Extracted ${data.text.length} characters from PDF`);
-      return data.text;
+      const pdfParser = new PDFParse({ data: dataBuffer });
+      const result = await pdfParser.getText();
+      console.log(`✅ Extracted ${result.text.length} characters from PDF`);
+      return result.text;
     } catch (error) {
       console.error('❌ Error reading PDF:', error.message);
       return '';
@@ -111,10 +114,11 @@ class ResumeService {
         Return ONLY the JSON object. No markdown, no code blocks.
       `;
 
-      const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text().trim();
+      const result = await genAI.models.generateContent({
+        model: 'gemini-2.0-flash-001',
+        contents: prompt
+      });
+      const text = result.text.trim();
 
       let cleanText = text;
       if (cleanText.startsWith('```')) {
@@ -161,10 +165,11 @@ class ResumeService {
         }
       `;
 
-      const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      let text = response.text().trim();
+      const result = await genAI.models.generateContent({
+        model: 'gemini-2.0-flash-001',
+        contents: prompt
+      });
+      let text = result.text.trim();
 
       if (text.startsWith('```')) {
         text = text.split('```')[1];
