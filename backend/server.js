@@ -9,9 +9,14 @@ const path = require('path');
 require('dotenv').config();
 
 const authRoutes = require('./routes/authRoutes');
+
+const resumeroutes = require("./routes/resumeRoutes")
+
 const uc7Routes = require('./routes/uc7-mockInterview');
 const coursesRoutes = require('./routes/coursesRoutes');
 const outreachRoutes = require('./routes/outreachRoutes');
+
+const atsRoutes = require('./routes/atsRoutes');
 const UserController = require('./controllers/userController');
 const dbService = require('./services/db.service');
 
@@ -42,9 +47,11 @@ app.use('/api/', limiter);
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use("/api/resume", resumeroutes)
 app.use('/api/uc7', uc7Routes);
 app.use('/api/courses', coursesRoutes);
 app.use('/api/outreach', outreachRoutes);
+app.use('/api/ats', atsRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
