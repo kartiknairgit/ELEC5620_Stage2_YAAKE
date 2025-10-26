@@ -61,7 +61,7 @@ const InterviewSession = ({ interviewData, onFinishInterview }) => {
     setConversationHistory(newConversation);
 
     try {
-      const response = await fetch('http://localhost:5001/api/uc7/answer', {
+      const response = await fetch('http://localhost:5002/api/uc7/answer', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

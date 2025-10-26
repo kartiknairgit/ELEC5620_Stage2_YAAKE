@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // API base URL
-const API_BASE_URL = 'http://localhost:5001/api';
+const API_BASE_URL = 'http://localhost:5002/api';
 
 // Create axios instance
 const api = axios.create({
@@ -201,6 +201,10 @@ export const outreachAPI = {
     const response = await api.get(`/outreach/${id}/export/text`, {
       responseType: 'blob'
     });
+    return response.data;
+  }
+};
+
 // ATS API calls
 export const atsAPI = {
   // Score resume against job description
