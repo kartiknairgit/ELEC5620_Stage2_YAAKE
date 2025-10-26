@@ -45,11 +45,12 @@ api.interceptors.response.use(
 // Authentication API calls
 export const authAPI = {
   // Register new user
-  register: async (email, password, confirmPassword) => {
+  register: async (email, password, confirmPassword, role) => {
     const response = await api.post('/auth/register', {
       email,
       password,
-      confirmPassword
+      confirmPassword,
+      role
     });
     return response.data;
   },
@@ -88,6 +89,57 @@ export const authAPI = {
   logout: async () => {
     const response = await api.post('/auth/logout');
     return response.data;
+  }
+};
+
+// Courses API
+export const coursesAPI = {
+  // list/search courses: accept optional { q }
+  getCourses: async ({ q } = {}) => {
+    // Attach the logged-in user's id (if available) so server can scope results.
+    let userId;
+    try {
+      const stored = localStorage.getItem('yaake_user');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        userId = parsed._id || parsed.id || parsed.email;
+      }
+    } catch (err) {
+      // ignore parse errors
+    }
+
+    const params = { q };
+    if (userId) params.userId = userId;
+    const response = await api.get('/courses', { params });
+    // backend returns { success: true, data: [...] }
+    return response.data && response.data.data ? response.data.data : [];
+  },
+
+  getCourse: async (id) => {
+    const response = await api.get(`/courses/${id}`);
+    return response.data && response.data.data ? response.data.data : null;
+  },
+
+  createCourse: async (course) => {
+    const response = await api.post('/courses', course);
+    return response.data && response.data.data ? response.data.data : null;
+  },
+
+  // Extract course metadata from a URL using backend prompt service
+  extractCourseFromUrl: async (url) => {
+    const response = await api.post('/courses/extract', { url });
+    return response.data && response.data.data ? response.data.data : null;
+  },
+
+  updateCourse: async (id, updates) => {
+    const response = await api.patch(`/courses/${id}`, updates);
+    return response.data && response.data.data ? response.data.data : null;
+  },
+
+  deleteCourse: async (id) => {
+    const response = await api.delete(`/courses/${id}`);
+    // delete returns { success: true, message: 'Course deleted' }
+    return response.data || null;
   }
 };
 

@@ -26,7 +26,7 @@ const register = async (req, res) => {
       });
     }
 
-    const { email, password } = req.body;
+  const { email, password, role } = req.body;
 
     // FR4: Check if user already exists (duplicate email handling)
     const existingUser = await UserController.findByEmail(email);
@@ -38,7 +38,8 @@ const register = async (req, res) => {
     }
 
     // Create new user (FR3: pending verification status)
-    const user = await UserController.create(email, password, false, "applicant");
+  const userRole = role || 'candidate';
+  const user = await UserController.create(email, password, false, userRole);
     // FR3: Generate verification token
 
     console.log('Newly created user:', user);
@@ -49,13 +50,17 @@ const register = async (req, res) => {
     const emailResult = await sendVerificationEmail(email, verificationToken);
 
     // Generate JWT token
-    const token = generateToken(user.email);
+    const token = generateToken(user._id || user.id);
+
+    // Convert user to plain object and remove password
+    const userObj = user.toObject ? user.toObject() : user;
+    delete userObj.password;
 
     res.status(201).json({
       success: true,
       message: "User registered successfully. Please check your email to verify your account.",
       data: {
-        user: user.toJSON(),
+        user: userObj,
         token,
         emailSent: emailResult.success,
       },
@@ -109,11 +114,15 @@ const login = async (req, res) => {
     // Generate JWT token
     const token = generateToken(user._id || user.id);
 
+    // Convert user to plain object and remove password
+    const userObj = user.toObject ? user.toObject() : user;
+    delete userObj.password;
+
     res.status(200).json({
       success: true,
       message: "Login successful",
       data: {
-        user: user.toJSON(),
+        user: userObj,
         token,
       },
     });
@@ -228,10 +237,14 @@ const getMe = async (req, res) => {
       });
     }
 
+    // Convert user to plain object and remove password
+    const userObj = user.toObject ? user.toObject() : user;
+    delete userObj.password;
+
     res.status(200).json({
       success: true,
       data: {
-        user: user.toJSON(),
+        user: userObj,
       },
     });
   } catch (error) {
