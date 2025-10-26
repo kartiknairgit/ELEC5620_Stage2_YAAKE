@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // API base URL
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'http://localhost:5001/api';
 
 // Create axios instance
 const api = axios.create({
@@ -140,6 +140,40 @@ export const coursesAPI = {
     const response = await api.delete(`/courses/${id}`);
     // delete returns { success: true, message: 'Course deleted' }
     return response.data || null;
+  }
+};
+
+// ATS API calls
+export const atsAPI = {
+  // Score resume against job description
+  scoreResume: async (file, jobDescription, onUploadProgress) => {
+    const formData = new FormData();
+    formData.append('resume', file);
+    formData.append('jobDescription', jobDescription);
+
+    const response = await api.post('/ats/score', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      },
+      onUploadProgress: onUploadProgress ? (progressEvent) => {
+        const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+        onUploadProgress(percentCompleted);
+      } : undefined
+    });
+
+    return response.data;
+  },
+
+  // Get health status
+  getHealth: async () => {
+    const response = await api.get('/ats/health');
+    return response.data;
+  },
+
+  // Get scoring criteria information
+  getCriteria: async () => {
+    const response = await api.get('/ats/criteria');
+    return response.data;
   }
 };
 
