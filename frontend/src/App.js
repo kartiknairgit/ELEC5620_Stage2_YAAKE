@@ -5,11 +5,13 @@ import SignupForm from './components/Auth/SignupForm';
 import Dashboard from './pages/Dashboard';
 import LandingPage from './components/LandingPage';
 import './App.css';
+import Notifications from './components/Notification/Notifications';
 
 function App() {
   return (
     <Router>
       <div className="App">
+        <Notifications />
         <Routes>
           <Route path="/" element={<Navigate to="/landing" replace />} />
           <Route path="/login" element={<LoginForm />} />
