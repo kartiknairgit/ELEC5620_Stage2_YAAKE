@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // API base URL
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'http://localhost:5001/api';
 
 // Create axios instance
 const api = axios.create({
@@ -140,6 +140,68 @@ export const coursesAPI = {
     const response = await api.delete(`/courses/${id}`);
     // delete returns { success: true, message: 'Course deleted' }
     return response.data || null;
+  }
+};
+
+// Outreach API
+export const outreachAPI = {
+  // Generate new outreach email with AI
+  generateEmail: async (data) => {
+    const response = await api.post('/outreach/generate', data);
+    return response.data?.data || null;
+  },
+
+  // Get all outreach emails
+  getOutreachEmails: async (status) => {
+    const params = status ? { status } : {};
+    const response = await api.get('/outreach', { params });
+    return response.data?.data || [];
+  },
+
+  // Get single outreach email
+  getOutreach: async (id) => {
+    const response = await api.get(`/outreach/${id}`);
+    return response.data?.data || null;
+  },
+
+  // Update outreach email
+  updateOutreach: async (id, updates) => {
+    const response = await api.patch(`/outreach/${id}`, updates);
+    return response.data?.data || null;
+  },
+
+  // Regenerate email with new instructions
+  regenerateEmail: async (id, instructions) => {
+    const response = await api.post(`/outreach/${id}/regenerate`, { instructions });
+    return response.data?.data || null;
+  },
+
+  // Send outreach email
+  sendEmail: async (id) => {
+    const response = await api.post(`/outreach/${id}/send`);
+    return response.data || null;
+  },
+
+  // Delete outreach email
+  deleteOutreach: async (id) => {
+    const response = await api.delete(`/outreach/${id}`);
+    return response.data || null;
+  },
+
+  // Export as PDF
+  exportPDF: async (id) => {
+    const response = await api.get(`/outreach/${id}/export/pdf`, {
+      responseType: 'blob'
+    });
+    return response.data;
+  },
+
+  // Export as text
+  exportText: async (id) => {
+    const response = await api.get(`/outreach/${id}/export/text`, {
+      responseType: 'blob'
+    });
+    return response.data;
   }
 };
 
