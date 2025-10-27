@@ -17,10 +17,10 @@ const findById = async (id) => {
   }
 };
 
-const create = async (email, password, isVerified = false, role = 'applicant', name = undefined) => {
+const create = async (email, password, isVerified = false, role = 'applicant', companyName = undefined, name = undefined) => {
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash(password, salt);
-  const user = new User({ name, email: email.toLowerCase(), password: hashedPassword, isVerified, role });
+  const user = new User({ name, email: email.toLowerCase(), password: hashedPassword, isVerified, role, companyName });
   await user.save();
   return user;
 };
