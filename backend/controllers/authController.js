@@ -26,7 +26,7 @@ const register = async (req, res) => {
       });
     }
 
-  const { email, password, role } = req.body;
+  const { email, password, role, companyName } = req.body;
 
     // FR4: Check if user already exists (duplicate email handling)
     const existingUser = await UserController.findByEmail(email);
@@ -39,7 +39,7 @@ const register = async (req, res) => {
 
     // Create new user (FR3: pending verification status)
   const userRole = role || 'candidate';
-  const user = await UserController.create(email, password, false, userRole);
+  const user = await UserController.create(email, password, false, userRole, companyName);
     // FR3: Generate verification token
 
     console.log('Newly created user:', user);

@@ -15,6 +15,7 @@ const resumeroutes = require("./routes/resumeRoutes")
 const uc7Routes = require('./routes/uc7-mockInterview');
 const coursesRoutes = require('./routes/coursesRoutes');
 const outreachRoutes = require('./routes/outreachRoutes');
+const questionRoutes = require('./routes/questionRoutes');
 
 const atsRoutes = require('./routes/atsRoutes');
 const UserController = require('./controllers/userController');
@@ -51,6 +52,7 @@ app.use("/api/resume", resumeroutes)
 app.use('/api/uc7', uc7Routes);
 app.use('/api/courses', coursesRoutes);
 app.use('/api/outreach', outreachRoutes);
+app.use('/api/questions', questionRoutes);
 app.use('/api/ats', atsRoutes);
 
 // Health check endpoint
