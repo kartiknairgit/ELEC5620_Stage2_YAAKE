@@ -11,7 +11,7 @@ require('dotenv').config();
 const authRoutes = require('./routes/authRoutes');
 
 const resumeroutes = require("./routes/resumeRoutes")
-
+const jobpostroutes = require("./routes/jobPostRoutes")
 const uc7Routes = require('./routes/uc7-mockInterview');
 const coursesRoutes = require('./routes/coursesRoutes');
 const outreachRoutes = require('./routes/outreachRoutes');
@@ -52,6 +52,7 @@ app.use('/api/uc7', uc7Routes);
 app.use('/api/courses', coursesRoutes);
 app.use('/api/outreach', outreachRoutes);
 app.use('/api/ats', atsRoutes);
+app.use('/api/jobpost', jobpostroutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
