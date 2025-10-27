@@ -50,6 +50,10 @@ async function generateJson({ systemInstruction, userPrompt, responseSchema, tem
       const model = genAI.getGenerativeModel({ model: modelName, systemInstruction });
       const result = await model.generateContent({ contents: content, generationConfig });
       const text = result?.response?.text?.() ?? '';
+      if (process.env.PROMPT_DEBUG === 'true') {
+        console.log('\n🧪 GEMINI RAW OUTPUT:');
+        console.log(String(text));
+      }
       if (!text) throw new Error('Empty response from LLM');
 
       let parsed;

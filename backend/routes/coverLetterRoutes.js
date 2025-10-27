@@ -14,6 +14,7 @@ router.post(
   body('jobDescriptionText').optional().isString().isLength({ max: 20000 }),
   body('style').optional().isIn(['formal', 'conversational', 'persuasive']),
   body('length').optional().isIn(['short', 'standard']),
+  body('maxWords').optional().isInt({ min: 120, max: 800 }).toInt(),
   body('userNotes').optional().isString().isLength({ max: 1000 }),
   controller.generate
 );
@@ -25,6 +26,7 @@ router.post(
   body('editInstructions').optional().isString().isLength({ max: 1000 }),
   body('newTone').optional().isIn(['formal', 'conversational', 'persuasive']),
   body('length').optional().isIn(['short', 'standard']),
+  body('maxWords').optional().isInt({ min: 120, max: 800 }).toInt(),
   controller.refine
 );
 
