@@ -11,7 +11,8 @@ const SignupForm = () => {
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'applicant'
+    role: 'applicant',
+    companyName: ''
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -102,6 +103,11 @@ const SignupForm = () => {
       newErrors.confirmPassword = 'Passwords do not match';
     }
 
+    // Company name validation (required for recruiters)
+    if (formData.role === 'recruiter' && !formData.companyName.trim()) {
+      newErrors.companyName = 'Company name is required for recruiters';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -122,7 +128,8 @@ const SignupForm = () => {
         formData.email,
         formData.password,
         formData.confirmPassword,
-        formData.role
+        formData.role,
+        formData.companyName
       );
 
       if (response.success) {
@@ -233,6 +240,27 @@ const SignupForm = () => {
             </select>
           </div>
         </div>
+
+        {formData.role === 'recruiter' && (
+          <div className="form-group">
+            <label htmlFor="companyName" className="form-label">
+              Company Name
+            </label>
+            <input
+              type="text"
+              id="companyName"
+              name="companyName"
+              value={formData.companyName}
+              onChange={handleChange}
+              className={`form-input ${errors.companyName ? 'error' : ''}`}
+              placeholder="Your company name"
+              disabled={loading}
+            />
+            {errors.companyName && (
+              <span className="error-text">{errors.companyName}</span>
+            )}
+          </div>
+        )}
 
         <div className="form-group">
           <label htmlFor="password" className="form-label">

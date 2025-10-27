@@ -45,12 +45,13 @@ api.interceptors.response.use(
 // Authentication API calls
 export const authAPI = {
   // Register new user
-  register: async (email, password, confirmPassword, role) => {
+  register: async (email, password, confirmPassword, role, companyName) => {
     const response = await api.post('/auth/register', {
       email,
       password,
       confirmPassword,
-      role
+      role,
+      companyName
     });
     return response.data;
   },
@@ -235,6 +236,75 @@ export const atsAPI = {
   // Get scoring criteria information
   getCriteria: async () => {
     const response = await api.get('/ats/criteria');
+    return response.data;
+  }
+};
+
+// Interview Question Generator API (for recruiters)
+export const questionAPI = {
+  // Generate new question set with AI
+  generateQuestions: async (data) => {
+    // AI generation can take longer, so we use a 60-second timeout
+    const response = await api.post('/questions/generate', data, {
+      timeout: 60000 // 60 seconds for AI generation
+    });
+    return response.data?.data || null;
+  },
+
+  // Get all question sets for current recruiter
+  getMyQuestionSets: async (visibility) => {
+    const params = visibility ? { visibility } : {};
+    const response = await api.get('/questions/my-sets', { params });
+    return response.data?.data || [];
+  },
+
+  // Get public sample questions (for applicants)
+  getPublicSamples: async (filters = {}) => {
+    const response = await api.get('/questions/samples', { params: filters });
+    return response.data?.data || [];
+  },
+
+  // Get company templates (for applicants)
+  getCompanyTemplates: async (filters = {}) => {
+    const response = await api.get('/questions/templates', { params: filters });
+    return response.data?.data || {};
+  },
+
+  // Get single question set by ID
+  getQuestionSet: async (id) => {
+    const response = await api.get(`/questions/${id}`);
+    return response.data?.data || null;
+  },
+
+  // Update question set (edit questions, change details)
+  updateQuestionSet: async (id, updates) => {
+    const response = await api.patch(`/questions/${id}`, updates);
+    return response.data?.data || null;
+  },
+
+  // Delete question set
+  deleteQuestionSet: async (id) => {
+    const response = await api.delete(`/questions/${id}`);
+    return response.data || null;
+  },
+
+  // Update visibility (make public/template/private)
+  updateVisibility: async (id, visibility) => {
+    const response = await api.post(`/questions/${id}/visibility`, { visibility });
+    return response.data?.data || null;
+  },
+
+  // Provide feedback on AI-generated questions
+  provideFeedback: async (id, feedback) => {
+    const response = await api.post(`/questions/${id}/feedback`, { feedback });
+    return response.data?.data || null;
+  },
+
+  // Export question set as PDF
+  exportPDF: async (id) => {
+    const response = await api.get(`/questions/${id}/export/pdf`, {
+      responseType: 'blob'
+    });
     return response.data;
   }
 };
