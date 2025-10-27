@@ -10,7 +10,8 @@ const SignupForm = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    role: 'applicant'
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -120,7 +121,8 @@ const SignupForm = () => {
       const response = await authAPI.register(
         formData.email,
         formData.password,
-        formData.confirmPassword
+        formData.confirmPassword,
+        formData.role
       );
 
       if (response.success) {
@@ -193,23 +195,43 @@ const SignupForm = () => {
           </div>
         )}
 
-        <div className="form-group">
-          <label htmlFor="email" className="form-label">
-            Email Address
-          </label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            className={`form-input ${errors.email ? 'error' : ''}`}
-            placeholder="you@example.com"
-            disabled={loading}
-          />
-          {errors.email && (
-            <span className="error-text">{errors.email}</span>
-          )}
+        <div className="form-row">
+          <div className="form-group">
+            <label htmlFor="email" className="form-label">
+              Email Address
+            </label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              className={`form-input ${errors.email ? 'error' : ''}`}
+              placeholder="you@example.com"
+              disabled={loading}
+            />
+            {errors.email && (
+              <span className="error-text">{errors.email}</span>
+            )}
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="role" className="form-label">
+              Register as
+            </label>
+            <select
+              id="role"
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+              className="form-input"
+              disabled={loading}
+            >
+              <option value="applicant">Applicant</option>
+              <option value="recruiter">Recruiter</option>
+              <option value="career_trainer">Career Trainer</option>
+            </select>
+          </div>
         </div>
 
         <div className="form-group">
@@ -254,6 +276,8 @@ const SignupForm = () => {
             Must be 8+ characters with uppercase, lowercase, number, and special character
           </span>
         </div>
+
+        
 
         <div className="form-group">
           <label htmlFor="confirmPassword" className="form-label">
@@ -384,6 +408,23 @@ const SignupForm = () => {
             opacity: 1;
             transform: translateY(0);
           }
+        }
+
+        .form-row {
+          display: flex;
+          gap: 16px;
+          align-items: flex-start;
+        }
+
+        @media (max-width: 640px) {
+          .form-row {
+            flex-direction: column;
+          }
+        }
+
+        .form-row .form-group {
+          flex: 1;
+          margin-bottom: 24px;
         }
 
         .form-group {

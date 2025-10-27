@@ -15,7 +15,12 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+
+    "@google/genai": "^1.25.0",
+
     "@google/generative-ai": "^0.24.1",
+  "axios": "^1.5.0",
+
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "docx": "^9.5.1",
@@ -25,10 +30,12 @@
     "express-validator": "^7.0.1",
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
-    "mammoth": "^1.11.0",
     "mongoose": "^7.5.0",
-    "multer": "^2.0.2",
-    "pdf-parse": "^2.4.5"
+    "pdfkit": "^0.13.0",
+    "resend": "^3.5.0",
+    "mammoth": "^1.11.0",
+    "multer": "^1.4.5-lts.1",
+    "pdf-parse": "^2.4.4"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"
