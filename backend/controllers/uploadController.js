@@ -1,7 +1,7 @@
 const { validationResult } = require('express-validator');
-let pdfParseMod;
-try { pdfParseMod = require('pdf-parse'); } catch (e) { pdfParseMod = null; }
-const mammoth = require('mammoth');
+const fs = require('fs');
+const path = require('path');
+const { getTextFromFile } = require('../services/textExtract.service');
 
 function resolvePdfParse() {
   let fn = pdfParseMod;
@@ -30,35 +30,22 @@ async function uploadResume(req, res, next) {
       return res.status(400).json({ success: false, message: 'No file uploaded' });
     }
 
-    const { originalname, mimetype, buffer, size } = req.file;
+    const { originalname, mimetype, buffer, size, path: savedPath } = req.file;
     if (size > 10 * 1024 * 1024) {
       return res.status(400).json({ success: false, message: 'File too large (max 10MB)' });
     }
 
     let text = '';
-    if (mimetype === 'application/pdf' || originalname.toLowerCase().endsWith('.pdf')) {
-      const pdfParse = resolvePdfParse();
-      if (pdfParse) {
-        try {
-          const parsed = await pdfParse(buffer);
-          text = (parsed.text || '').replace(/\s+\n/g, '\n').trim();
-        } catch (e) {
-          // Fall through to error below if empty
-        }
+    const tempPath = savedPath || path.join(__dirname, `../uploads/${Date.now()}-${originalname}`);
+    if (!savedPath) {
+      fs.writeFileSync(tempPath, buffer);
+    }
+    try {
+      text = await getTextFromFile(tempPath);
+    } finally {
+      if (!savedPath && fs.existsSync(tempPath)) {
+        fs.unlinkSync(tempPath);
       }
-      if (!text) {
-        return res.status(400).json({ success: false, message: 'Failed to parse PDF. Please upload DOCX or paste text.' });
-      }
-    } else if (
-      mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
-      originalname.toLowerCase().endsWith('.docx')
-    ) {
-      const parsed = await mammoth.extractRawText({ buffer });
-      text = (parsed.value || '').trim();
-    } else if (mimetype.startsWith('text/') || originalname.toLowerCase().endsWith('.txt')) {
-      text = buffer.toString('utf8');
-    } else {
-      return res.status(400).json({ success: false, message: 'Unsupported file type. Use PDF, DOCX, or TXT.' });
     }
 
     if (!text || text.length < 50) {
