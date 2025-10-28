@@ -37,7 +37,7 @@ const Dashboard = () => {
     { path: "/dashboard/skills-gap", iconType: "chart", label: "Skills Gap Analysis", useCase: "UC10", roles: ["applicant"] },
     { path: "/dashboard/interview-questions", iconType: "lightbulb", label: "Interview Questions Bank", useCase: "UC11", roles: ["applicant"] },
     { path: "/dashboard/question-generator", iconType: "lightbulb", label: "Question Generator", useCase: "Recruiter", roles: ["recruiter"] },
-    { path: "/dashboard/sample-questions", iconType: "document", label: "Sample Questions", useCase: "Applicant", roles: ["applicant"] },
+    { path: "/dashboard/sample-questions", iconType: "document", label: "Sample Questions", useCase: "Recruiter", roles: ["recruiter"] },
   ];
 
   // Compute displayed menu items based on user role (normalize to handle spaces/underscores)
@@ -327,8 +327,12 @@ const Dashboard = () => {
             <Route path="/job-post-creator" element={<JobPostCreator />} />
             <Route path="/skills-gap" element={<SkillsGapAnalysis />} />
             <Route path="/interview-questions" element={<InterviewQuestionsBank />} />
-            <Route path="/question-generator" element={<InterviewQuestionGenerator />} />
-            <Route path="/sample-questions" element={<SampleQuestions />} />
+            {userRole === "recruiter" ? (
+              <Route path="/question-generator" element={<InterviewQuestionGenerator />} />
+            ) : null}
+            {userRole === "recruiter" ? (
+              <Route path="/sample-questions" element={<SampleQuestions />} />
+            ) : null}
             <Route path="/manage-courses" element={<ManageCourses />} />
           </Routes>
         </div>
