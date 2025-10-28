@@ -21,6 +21,7 @@ const outreachRoutes = require('./routes/outreachRoutes');
 const questionRoutes = require('./routes/questionRoutes');
 
 const atsRoutes = require('./routes/atsRoutes');
+const scheduleRoutes = require('./routes/scheduleRoutes');
 const UserController = require('./controllers/userController');
 const dbService = require('./services/db.service');
 
@@ -60,6 +61,7 @@ app.use('/api/courses', coursesRoutes);
 app.use('/api/outreach', outreachRoutes);
 app.use('/api/questions', questionRoutes);
 app.use('/api/ats', atsRoutes);
+app.use('/api/schedule', scheduleRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

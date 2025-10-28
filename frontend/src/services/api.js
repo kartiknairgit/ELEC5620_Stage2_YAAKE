@@ -1,7 +1,9 @@
 import axios from 'axios';
 
 // API base URL
+
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001/api';
+
 
 // Create axios instance
 const api = axios.create({
@@ -338,6 +340,52 @@ export const questionAPI = {
       responseType: 'blob'
     });
     return response.data;
+  }
+};
+
+// Interview Scheduling API
+export const scheduleAPI = {
+  // Get list of applicants (for recruiters)
+  getAllApplicants: async () => {
+    const response = await api.get('/schedule/applicants/list');
+    return response.data?.data || [];
+  },
+
+  // Create new interview schedule (recruiter only)
+  createInterview: async (data) => {
+    const response = await api.post('/schedule', data);
+    return response.data?.data || null;
+  },
+
+  // Get all my interviews
+  getMyInterviews: async (status) => {
+    const params = status ? { status } : {};
+    const response = await api.get('/schedule', { params });
+    return response.data?.data || [];
+  },
+
+  // Get single interview
+  getInterview: async (id) => {
+    const response = await api.get(`/schedule/${id}`);
+    return response.data?.data || null;
+  },
+
+  // Respond to interview (applicant only)
+  respondToInterview: async (id, responseData) => {
+    const response = await api.post(`/schedule/${id}/respond`, responseData);
+    return response.data?.data || null;
+  },
+
+  // Update interview (recruiter only)
+  updateInterview: async (id, updates) => {
+    const response = await api.patch(`/schedule/${id}`, updates);
+    return response.data?.data || null;
+  },
+
+  // Cancel interview (recruiter only)
+  cancelInterview: async (id) => {
+    const response = await api.delete(`/schedule/${id}`);
+    return response.data || null;
   }
 };
 

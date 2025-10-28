@@ -16,6 +16,7 @@ import InterviewQuestionsBank from "./Features/InterviewQuestionsBank";
 import InterviewQuestionGenerator from "./Features/InterviewQuestionGenerator";
 import SampleQuestions from "./Features/SampleQuestions";
 import ManageCourses from "../components/courses/ManageCourses";
+import InterviewScheduler from "./Features/InterviewScheduler";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -32,12 +33,13 @@ const Dashboard = () => {
     { path: "/dashboard/export-center", iconType: "upload", label: "Export Center", useCase: "UC5", roles: ["applicant"] },
     { path: "/dashboard/cold-outreach", iconType: "email", label: "Cold Outreach", useCase: "UC6", roles: ["applicant"] },
     { path: "/dashboard/mock-interview", iconType: "microphone", label: "Mock Interview", useCase: "UC7", roles: ["applicant"] },
+    { path: "/dashboard/interview-scheduler", iconType: "calendar", label: "Interview Scheduler", useCase: "Scheduling", roles: ["applicant", "recruiter"] },
     { path: "/dashboard/resume-translator", iconType: "globe", label: "Resume Translator", useCase: "UC8", roles: ["applicant"] },
     { path: "/dashboard/job-post-creator", iconType: "clipboard", label: "Job Post Creator", useCase: "UC9", roles: ["recruiter"] },
     { path: "/dashboard/skills-gap", iconType: "chart", label: "Skills Gap Analysis", useCase: "UC10", roles: ["applicant"] },
     { path: "/dashboard/interview-questions", iconType: "lightbulb", label: "Interview Questions Bank", useCase: "UC11", roles: ["applicant"] },
     { path: "/dashboard/question-generator", iconType: "lightbulb", label: "Question Generator", useCase: "Recruiter", roles: ["recruiter"] },
-    { path: "/dashboard/sample-questions", iconType: "document", label: "Sample Questions", useCase: "Applicant", roles: ["applicant"] },
+    { path: "/dashboard/sample-questions", iconType: "document", label: "Sample Questions", useCase: "Recruiter", roles: ["recruiter"] },
   ];
 
   // Compute displayed menu items based on user role (normalize to handle spaces/underscores)
@@ -121,6 +123,12 @@ const Dashboard = () => {
         return (
           <svg className={iconClasses} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+          </svg>
+        );
+      case "calendar":
+        return (
+          <svg className={iconClasses} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
         );
       default:
@@ -323,12 +331,17 @@ const Dashboard = () => {
             <Route path="/export-center" element={<ExportCenter />} />
             <Route path="/cold-outreach" element={<ColdOutreach />} />
             <Route path="/mock-interview" element={<MockInterview />} />
+            <Route path="/interview-scheduler" element={<InterviewScheduler />} />
             <Route path="/resume-translator" element={<ResumeTranslator />} />
             <Route path="/job-post-creator" element={<JobPostCreator />} />
             <Route path="/skills-gap" element={<SkillsGapAnalysis />} />
             <Route path="/interview-questions" element={<InterviewQuestionsBank />} />
-            <Route path="/question-generator" element={<InterviewQuestionGenerator />} />
-            <Route path="/sample-questions" element={<SampleQuestions />} />
+            {userRole === "recruiter" ? (
+              <Route path="/question-generator" element={<InterviewQuestionGenerator />} />
+            ) : null}
+            {userRole === "recruiter" ? (
+              <Route path="/sample-questions" element={<SampleQuestions />} />
+            ) : null}
             <Route path="/manage-courses" element={<ManageCourses />} />
           </Routes>
         </div>

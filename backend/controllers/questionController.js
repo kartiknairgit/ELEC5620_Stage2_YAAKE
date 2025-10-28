@@ -263,7 +263,7 @@ const getQuestionSetById = async (req, res) => {
     const isPublic = ['public_sample', 'company_template'].includes(questionSet.visibility);
 
     // Recruiters can see their own sets, applicants can only see public/template sets
-    if (!isOwner && (!isPublic || isRecruiter)) {
+    if (!isOwner && !isPublic) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to view this question set'
