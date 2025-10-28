@@ -9,6 +9,9 @@ const path = require('path');
 require('dotenv').config();
 
 const authRoutes = require('./routes/authRoutes');
+const coverLetterRoutes = require('./routes/coverLetterRoutes');
+const exportRoutes = require('./routes/exportRoutes');
+const uploadRoutes = require('./routes/uploadRoutes');
 
 const resumeroutes = require("./routes/resumeRoutes")
 
@@ -49,6 +52,9 @@ app.use('/api/', limiter);
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/cover-letters', coverLetterRoutes);
+app.use('/api/export', exportRoutes);
+app.use('/api/files', uploadRoutes);
 app.use("/api/resume", resumeroutes)
 app.use('/api/uc7', uc7Routes);
 app.use('/api/courses', coursesRoutes);
