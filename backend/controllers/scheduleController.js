@@ -407,7 +407,7 @@ const getAllApplicants = async (req, res) => {
       });
     }
 
-    const applicants = await User.find({ role: 'applicant', isVerified: true })
+    const applicants = await User.find({ role: 'applicant' })
       .select('email createdAt')
       .sort({ email: 1 });
 

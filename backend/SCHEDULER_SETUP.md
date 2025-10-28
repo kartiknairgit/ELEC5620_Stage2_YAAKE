@@ -31,23 +31,23 @@ npm install
 
 ### 3. Environment Configuration
 
-Ensure your `backend/.env` file has the correct MongoDB connection string:
+**IMPORTANT:** The project uses MongoDB Atlas (cloud database).
+
+Create a `backend/.env` file with the MongoDB Atlas connection string:
 
 ```env
-MONGO_URI=mongodb://localhost:27017/yaake
+MONGO_URI=mongodb+srv://user:IqL4pU5XOlCuwDUO@cluster0.lydnys9.mongodb.net/YAAKE?retryWrites=true&w=majority
 PORT=5001
+JWT_SECRET=yaake_dev_secret_2024_change_in_production
+JWT_EXPIRE=24h
+FRONTEND_URL=http://localhost:3000
 ```
 
-### 4. Seed Test Users for Scheduler
+> **Note:** Contact the team to get the full `.env` file with all required configurations.
 
-This is a **CRITICAL** step - the scheduler won't work without test users!
+### 4. Test Users (Already in Cloud Database)
 
-```bash
-cd backend
-npm run seed
-```
-
-This will create the following test accounts:
+The following test accounts are **already created** in the MongoDB Atlas database. You do NOT need to run `npm run seed`:
 
 **Recruiters:**
 - Email: `recruiter1@yaake.com` | Password: `Recruiter@123`
@@ -57,8 +57,6 @@ This will create the following test accounts:
 - Email: `applicant1@yaake.com` | Password: `Applicant@123`
 - Email: `applicant2@yaake.com` | Password: `Applicant@123`
 - Email: `applicant3@yaake.com` | Password: `Applicant@123`
-
-> **Note:** If these users already exist in your database, the script will skip them and not create duplicates.
 
 ### 5. Start the Application
 
@@ -105,8 +103,7 @@ Frontend should start on `http://localhost:3000`
 
 ## Verification Checklist
 
-- [ ] MongoDB is running
-- [ ] Test users are seeded (`npm run seed` completed successfully)
+- [ ] `.env` file configured with MongoDB Atlas connection string
 - [ ] Backend is running on port 5001
 - [ ] Frontend is running on port 3000
 - [ ] Can login as recruiter
@@ -120,9 +117,9 @@ Frontend should start on `http://localhost:3000`
 ## Troubleshooting
 
 ### "No applicants found" when creating interview
-- Make sure you ran `npm run seed` in the backend directory
-- Check that MongoDB is running
-- Verify users were created by checking the database or re-running the seed script
+- Make sure your `.env` file has the correct MongoDB Atlas connection string
+- Check that the backend successfully connected to MongoDB (check server logs)
+- Verify the test users exist in the cloud database (they should already be there)
 
 ### Cannot create interview
 - Ensure you're logged in as a recruiter (not an applicant)
