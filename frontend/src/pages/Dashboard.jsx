@@ -11,6 +11,7 @@ import ColdOutreach from "./Features/ColdOutreach";
 import MockInterview from "./Features/MockInterview";
 import ResumeTranslator from "./Features/ResumeTranslator";
 import JobPostCreator from "./Features/JobPostCreator";
+import JobBoard from "./Features/JobBoard";
 import SkillsGapAnalysis from "./Features/SkillsGapAnalysis";
 import InterviewQuestionsBank from "./Features/InterviewQuestionsBank";
 import ManageCourses from "../components/courses/ManageCourses";
@@ -23,7 +24,7 @@ const Dashboard = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
-  const menuItems = [
+  const baseMenuItems = [
     { path: "/dashboard/resume-ats", iconType: "document", label: "Resume ATS Checker", useCase: "UC2" },
     { path: "/dashboard/cover-letter", iconType: "mail", label: "Cover Letter Generator", useCase: "UC3" },
     { path: "/dashboard/draft-editor", iconType: "pencil", label: "Draft Editor", useCase: "UC4" },
@@ -38,9 +39,19 @@ const Dashboard = () => {
 
   // Compute displayed menu items based on user role (normalize to handle spaces/underscores)
   const normalizedRole = user?.role ? user.role.toLowerCase().replace(/\s+/g, "_") : null;
-  const displayedMenuItems = [...menuItems];
+  const displayedMenuItems = [...baseMenuItems];
+
   if (normalizedRole === "career_trainer") {
     displayedMenuItems.push({ path: "/dashboard/manage-courses", iconType: "clipboard", label: "Manage Courses", useCase: "UC12" });
+  }
+
+  if (normalizedRole === "recruiter") {
+    displayedMenuItems.push({ path: "/dashboard/job-board", iconType: "document", label: "Job Board", useCase: "UC9A" });
+  } else {
+    const alreadyHas = displayedMenuItems.some((item) => item.path === "/dashboard/job-board");
+    if (!alreadyHas) {
+      displayedMenuItems.push({ path: "/dashboard/job-board", iconType: "document", label: "Job Board", useCase: "UC9" });
+    }
   }
 
   const getIcon = (iconType) => {
@@ -293,7 +304,7 @@ const Dashboard = () => {
         {/* Top Header */}
         <header className="bg-white shadow-sm border-b border-gray-200 px-8 py-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-gray-800">{location.pathname === "/dashboard" ? "Dashboard Home" : menuItems.find((item) => item.path === location.pathname)?.label || "Dashboard"}</h2>
+            <h2 className="text-2xl font-bold text-gray-800">{location.pathname === "/dashboard" ? "Dashboard Home" : displayedMenuItems.find((item) => item.path === location.pathname)?.label || "Dashboard"}</h2>
             <div className="flex items-center gap-4">
               <span className="text-gray-600">
                 Welcome, <span className="font-semibold">{user?.email}</span>
@@ -314,6 +325,7 @@ const Dashboard = () => {
             <Route path="/mock-interview" element={<MockInterview />} />
             <Route path="/resume-translator" element={<ResumeTranslator />} />
             <Route path="/job-post-creator" element={<JobPostCreator />} />
+            <Route path="/job-board" element={<JobBoard />} />
             <Route path="/skills-gap" element={<SkillsGapAnalysis />} />
             <Route path="/interview-questions" element={<InterviewQuestionsBank />} />
             <Route path="/manage-courses" element={<ManageCourses />} />

@@ -116,8 +116,34 @@ const authorize = (...roles) => {
   };
 };
 
+const optional = async (req, res, next) => {
+  const hasAuthHeader = req.headers.authorization && req.headers.authorization.startsWith('Bearer');
+  if (!hasAuthHeader) {
+    return next();
+  }
+
+  try {
+    const token = req.headers.authorization.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await UserModel.findById(decoded.id);
+
+    if (user) {
+      req.user = user;
+    }
+    next();
+  } catch (error) {
+    console.error('Optional auth token verification error:', error);
+    return res.status(401).json({
+      success: false,
+      message: 'Not authorized. Invalid token.',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   protect,
   requireVerification,
-  authorize
+  authorize,
+  optional
 };

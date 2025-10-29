@@ -3,6 +3,7 @@
 
 const { GoogleGenAI } = require('@google/genai');
 require('dotenv').config();
+const JobPost = require('../models/jobPostModel');
 
 const genAI = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY
@@ -168,6 +169,20 @@ class JobPostService {
     };
   }
 
+  sanitizeArray(value) {
+    if (!value) return [];
+    if (Array.isArray(value)) {
+      return value.map((item) => (typeof item === 'string' ? item.trim() : item)).filter(Boolean);
+    }
+    if (typeof value === 'string') {
+      return value
+        .split(/[\n,]/)
+        .map((item) => item.trim())
+        .filter(Boolean);
+    }
+    return [];
+  }
+
   async processJobPost(jobDetails, userId) {
     console.log(`\n${'='.repeat(60)}`);
     console.log(`🔄 PROCESSING JOB POST: ${jobDetails.jobTitle || 'Untitled'}`);
@@ -184,19 +199,39 @@ class JobPostService {
       console.log('\n🛡️  Step 3: Checking for bias...');
       const biasCheck = await this.checkBiasAndInclusion(jobPost);
 
-      console.log(`\n✅ JOB POST PROCESSING COMPLETE!`);
+      console.log('\n💾 Step 4: Saving job post to database...');
+
+      const record = await JobPost.create({
+        recruiterId: userId,
+        jobTitle: jobDetails.jobTitle,
+        department: jobDetails.department,
+        employmentType: jobDetails.employmentType,
+        location: jobDetails.location,
+        experienceLevel: jobDetails.experienceLevel,
+        responsibilities: this.sanitizeArray(jobDetails.responsibilities),
+        requiredSkills: this.sanitizeArray(jobDetails.requiredSkills),
+        yearsExperience: jobDetails.yearsExperience,
+        salaryRange: jobDetails.salaryRange,
+        aiGenerated: jobPost,
+        validation,
+        bias_check: biasCheck,
+        metadata: {
+          created_at: new Date().toISOString(),
+          created_by: userId,
+          api_used: 'Google Gemini (FREE)'
+        },
+        status: jobDetails.status || 'published',
+        tags: this.sanitizeArray(jobDetails.tags)
+      });
+
+      const plainRecord = record.toObject();
+
+      console.log('\n✅ JOB POST PROCESSING COMPLETE!');
       console.log(`${'='.repeat(60)}\n`);
 
       return {
         success: true,
-        data: jobPost,
-        validation,
-        bias_check: biasCheck,
-        metadata: {
-          created_by: userId,
-          created_at: new Date().toISOString(),
-          api_used: 'Google Gemini (FREE)'
-        }
+        data: plainRecord
       };
     } catch (error) {
       console.error(`\n❌ Error processing job post: ${error.message}`);

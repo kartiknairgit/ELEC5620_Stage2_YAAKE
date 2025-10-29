@@ -17,7 +17,6 @@ const coursesRoutes = require('./routes/coursesRoutes');
 const outreachRoutes = require('./routes/outreachRoutes');
 
 const atsRoutes = require('./routes/atsRoutes');
-const atsRoutes = require('./routes/atsRoutes');
 const UserController = require('./controllers/userController');
 const dbService = require('./services/db.service');
 

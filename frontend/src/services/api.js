@@ -205,6 +205,32 @@ export const outreachAPI = {
   }
 };
 
+// Job Post API
+export const jobPostAPI = {
+  create: async (payload) => {
+    const response = await api.post('/jobpost/create', payload);
+    return response.data?.data || null;
+  },
+
+  getMine: async () => {
+    const response = await api.get('/jobpost/mine');
+    return response.data?.data || [];
+  },
+
+  listPublic: async (params = {}) => {
+    const response = await api.get('/jobpost/public', { params });
+    return {
+      posts: response.data?.data || [],
+      pagination: response.data?.pagination || null
+    };
+  },
+
+  getById: async (id) => {
+    const response = await api.get(`/jobpost/${id}`);
+    return response.data?.data || null;
+  }
+};
+
 // ATS API calls
 export const atsAPI = {
   // Score resume against job description
