@@ -1,93 +1,407 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { jobPostAPI } from '../../services/api';
+
+const defaultForm = {
+  jobTitle: '',
+  companyName: '',
+  department: '',
+  employmentType: 'Full-time',
+  location: '',
+  salaryRange: '',
+  experienceLevel: '',
+  yearsExperience: '',
+  description: '',
+  responsibilities: '',
+  requiredSkills: '',
+  tags: '',
+  status: 'published'
+};
 
 const JobPostCreator = () => {
-  return (
-    <div className="min-h-full bg-gradient-to-br from-gray-50 to-gray-100 p-8">
-      <div className="max-w-6xl mx-auto">
-        {/* Header Section */}
-        <div className="mb-8">
-          <div className="inline-block px-4 py-1 bg-orange-100 text-orange-700 text-sm font-semibold rounded-full mb-4">
-            Use Case 9 (UC9)
-          </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Job Post Creator
-          </h1>
-          <p className="text-lg text-gray-600 max-w-3xl">
-            Create compelling job postings that attract top talent with AI-powered description generation and inclusive language suggestions.
+  const [form, setForm] = useState({ ...defaultForm });
+  const [formErrors, setFormErrors] = useState({});
+  const [creating, setCreating] = useState(false);
+  const [posts, setPosts] = useState([]);
+  const [loadingPosts, setLoadingPosts] = useState(true);
+  const [alert, setAlert] = useState({ type: '', message: '' });
+
+  const storedUser = useMemo(() => {
+    try {
+      const raw = localStorage.getItem('yaake_user');
+      return raw ? JSON.parse(raw) : null;
+    } catch (error) {
+      console.error('Failed to parse stored user', error);
+      return null;
+    }
+  }, []);
+
+  const isRecruiter = storedUser?.role?.toLowerCase() === 'recruiter';
+
+  useEffect(() => {
+    const loadPosts = async () => {
+      if (!isRecruiter) {
+        setLoadingPosts(false);
+        return;
+      }
+
+      try {
+        const data = await jobPostAPI.getMine();
+        setPosts(data);
+      } catch (error) {
+        console.error('Failed to fetch job posts', error);
+        setAlert({
+          type: 'error',
+          message: error.response?.data?.message || 'Unable to load existing job posts.'
+        });
+      } finally {
+        setLoadingPosts(false);
+      }
+    };
+
+    loadPosts();
+  }, [isRecruiter]);
+
+  const sanitizeListForPayload = (value) => {
+    if (!value) return [];
+    return value
+      .split(/\n|,/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+  };
+
+  const validateForm = () => {
+    const errors = {};
+
+    if (!form.jobTitle.trim()) {
+      errors.jobTitle = 'Job title is required';
+    }
+    if (!form.location.trim()) {
+      errors.location = 'Location is required';
+    }
+    if (!form.requiredSkills.trim()) {
+      errors.requiredSkills = 'List at least one required skill';
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    setAlert({ type: '', message: '' });
+    setForm((prev) => ({
+      ...prev,
+      [name]: value
+    }));
+
+    if (formErrors[name]) {
+      setFormErrors((prev) => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (creating) return;
+
+    if (!validateForm()) {
+      return;
+    }
+
+    const payload = {
+      ...form,
+      responsibilities: sanitizeListForPayload(form.responsibilities),
+      requiredSkills: sanitizeListForPayload(form.requiredSkills),
+      tags: sanitizeListForPayload(form.tags),
+      yearsExperience: form.yearsExperience ? Number(form.yearsExperience) : undefined
+    };
+
+    setCreating(true);
+    setAlert({ type: '', message: '' });
+    try {
+      const created = await jobPostAPI.create(payload);
+      setAlert({
+        type: 'success',
+        message: 'Job post published successfully.'
+      });
+      setPosts((prev) => [created, ...prev]);
+      setForm({ ...defaultForm });
+    } catch (error) {
+      console.error('Job post creation failed', error);
+      setAlert({
+        type: 'error',
+        message: error.response?.data?.message || 'Failed to publish job post.'
+      });
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  if (!isRecruiter) {
+    return (
+      <div className="min-h-full bg-gradient-to-br from-gray-50 to-gray-100 p-8">
+        <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow p-10 text-center">
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">Recruiter Access Required</h1>
+          <p className="text-gray-600">
+            The job post creator is available to recruiter accounts. Please log in as a recruiter to manage job postings.
           </p>
         </div>
+      </div>
+    );
+  }
 
-        {/* Status Banner */}
-        <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-amber-400 p-6 rounded-lg shadow-sm mb-8 transition-all duration-300 hover:shadow-md">
-          <div className="flex items-start">
-            <div className="flex-shrink-0">
-              <svg className="h-6 w-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+  return (
+    <div className="min-h-full bg-gradient-to-br from-gray-50 to-gray-100 p-8 space-y-8">
+      <header className="max-w-6xl mx-auto space-y-3">
+        <span className="inline-block px-4 py-1 bg-orange-100 text-orange-700 text-sm font-semibold rounded-full">Recruiter Toolkit</span>
+        <h1 className="text-4xl font-bold text-gray-900">Job Post Creator</h1>
+        <p className="text-lg text-gray-600 max-w-3xl">
+          Publish new opportunities in minutes. Share clear expectations, highlight key skills, and keep applicants aligned with your hiring needs.
+        </p>
+      </header>
+
+      <section className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <form onSubmit={handleSubmit} className="lg:col-span-2 bg-white rounded-2xl shadow-lg p-8 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="text-sm font-semibold text-gray-700">Job Title *</label>
+              <input
+                type="text"
+                name="jobTitle"
+                value={form.jobTitle}
+                onChange={handleChange}
+                className={`mt-2 w-full rounded-lg border px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500 ${formErrors.jobTitle ? 'border-red-400' : 'border-gray-200'}`}
+                placeholder="Senior Frontend Engineer"
+              />
+              {formErrors.jobTitle && <p className="mt-1 text-sm text-red-600">{formErrors.jobTitle}</p>}
             </div>
-            <div className="ml-4">
-              <h3 className="text-lg font-semibold text-amber-900">Currently In Development</h3>
-              <p className="text-amber-800 mt-1">This feature is being actively developed and will be available soon.</p>
+            <div>
+              <label className="text-sm font-semibold text-gray-700">Company</label>
+              <input
+                type="text"
+                name="companyName"
+                value={form.companyName}
+                onChange={handleChange}
+                className="mt-2 w-full rounded-lg border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                placeholder="Acme Labs"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-semibold text-gray-700">Department</label>
+              <input
+                type="text"
+                name="department"
+                value={form.department}
+                onChange={handleChange}
+                className="mt-2 w-full rounded-lg border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                placeholder="Product Engineering"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-semibold text-gray-700">Employment Type</label>
+              <select
+                name="employmentType"
+                value={form.employmentType}
+                onChange={handleChange}
+                className="mt-2 w-full rounded-lg border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              >
+                {['Full-time', 'Part-time', 'Contract', 'Internship', 'Temporary'].map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-sm font-semibold text-gray-700">Location *</label>
+              <input
+                type="text"
+                name="location"
+                value={form.location}
+                onChange={handleChange}
+                className={`mt-2 w-full rounded-lg border px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500 ${formErrors.location ? 'border-red-400' : 'border-gray-200'}`}
+                placeholder="Sydney, NSW (Hybrid)"
+              />
+              {formErrors.location && <p className="mt-1 text-sm text-red-600">{formErrors.location}</p>}
+            </div>
+            <div>
+              <label className="text-sm font-semibold text-gray-700">Salary Range</label>
+              <input
+                type="text"
+                name="salaryRange"
+                value={form.salaryRange}
+                onChange={handleChange}
+                className="mt-2 w-full rounded-lg border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                placeholder="$110k – $135k + super"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-semibold text-gray-700">Experience Level</label>
+              <input
+                type="text"
+                name="experienceLevel"
+                value={form.experienceLevel}
+                onChange={handleChange}
+                className="mt-2 w-full rounded-lg border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                placeholder="Mid-level"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-semibold text-gray-700">Years of Experience</label>
+              <input
+                type="number"
+                name="yearsExperience"
+                value={form.yearsExperience}
+                onChange={handleChange}
+                min="0"
+                className="mt-2 w-full rounded-lg border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                placeholder="3"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-semibold text-gray-700">Status</label>
+              <select
+                name="status"
+                value={form.status}
+                onChange={handleChange}
+                className="mt-2 w-full rounded-lg border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              >
+                <option value="published">Published</option>
+                <option value="draft">Draft</option>
+              </select>
             </div>
           </div>
-        </div>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Overview Card */}
-          <div className="bg-white rounded-xl shadow-lg p-8 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-            <h3 className="text-2xl font-bold text-gray-900 mb-6">Overview</h3>
-            <div className="space-y-4 text-gray-600">
-              <p className="leading-relaxed">
-                Craft job descriptions that resonate with qualified candidates. Our AI helps you write
-                clear, engaging, and inclusive postings that highlight key responsibilities and attract
-                the right talent to your organization.
-              </p>
-              <p className="leading-relaxed">
-                Optimize your job posts for search engines and job boards while avoiding common pitfalls
-                that could limit your candidate pool or create compliance issues.
-              </p>
-            </div>
+          <div>
+            <label className="text-sm font-semibold text-gray-700">Role Overview</label>
+            <textarea
+              name="description"
+              value={form.description}
+              onChange={handleChange}
+              rows="4"
+              className="mt-2 w-full rounded-lg border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              placeholder="Share what success looks like in this role..."
+            />
           </div>
 
-          {/* Features Card */}
-          <div className="bg-white rounded-xl shadow-lg p-8 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-            <h3 className="text-2xl font-bold text-gray-900 mb-6">Key Features</h3>
+          <div>
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-semibold text-gray-700">Responsibilities</label>
+              <span className="text-xs text-gray-400">One per line or separate with commas</span>
+            </div>
+            <textarea
+              name="responsibilities"
+              value={form.responsibilities}
+              onChange={handleChange}
+              rows="4"
+              className="mt-2 w-full rounded-lg border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              placeholder={'Lead sprint planning\nCollaborate with product and design\nMentor junior engineers'}
+            />
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-semibold text-gray-700">Required Skills *</label>
+              <span className="text-xs text-gray-400">One per line or separate with commas</span>
+            </div>
+            <textarea
+              name="requiredSkills"
+              value={form.requiredSkills}
+              onChange={handleChange}
+              rows="4"
+              className={`mt-2 w-full rounded-lg border px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500 ${formErrors.requiredSkills ? 'border-red-400' : 'border-gray-200'}`}
+              placeholder={'React & TypeScript\nCloud infrastructure (AWS/Azure)\nAccessibility best practices'}
+            />
+            {formErrors.requiredSkills && <p className="mt-1 text-sm text-red-600">{formErrors.requiredSkills}</p>}
+          </div>
+
+          <div>
+            <label className="text-sm font-semibold text-gray-700">Tags</label>
+            <textarea
+              name="tags"
+              value={form.tags}
+              onChange={handleChange}
+              rows="2"
+              className="mt-2 w-full rounded-lg border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              placeholder="frontend, leadership, hybrid"
+            />
+          </div>
+
+          {alert.message && (
+            <div
+              className={`rounded-lg px-4 py-3 text-sm ${
+                alert.type === 'success'
+                  ? 'border border-green-200 bg-green-50 text-green-700'
+                  : 'border border-red-200 bg-red-50 text-red-700'
+              }`}
+            >
+              {alert.message}
+            </div>
+          )}
+
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              className="px-6 py-3 rounded-lg bg-orange-600 text-white font-semibold shadow hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:opacity-70"
+              disabled={creating}
+            >
+              {creating ? 'Publishing...' : 'Publish Job Post'}
+            </button>
+          </div>
+        </form>
+
+        <aside className="bg-white rounded-2xl shadow-lg p-8 space-y-6">
+          <div>
+            <h2 className="text-2xl font-semibold text-gray-900">Recent Posts</h2>
+            <p className="text-sm text-gray-500 mt-1">Published items appear instantly on the applicant job board.</p>
+          </div>
+
+          {loadingPosts ? (
+            <div className="text-gray-500 text-sm">Loading your postings…</div>
+          ) : posts.length === 0 ? (
+            <div className="text-gray-500 text-sm">
+              You have not published any roles yet. Use the form to create your first posting.
+            </div>
+          ) : (
             <ul className="space-y-4">
-              {[
-                'Industry-standard templates',
-                'Inclusive language suggestions',
-                'Salary range recommendations',
-                'SEO optimization for job boards',
-                'Compliance checking'
-              ].map((feature, index) => (
-                <li key={index} className="flex items-start group">
-                  <div className="flex-shrink-0 mt-1">
-                    <div className="h-2 w-2 rounded-full bg-orange-600 group-hover:bg-orange-700 transition-colors duration-200"></div>
+              {posts.map((post) => (
+                <li key={post._id} className="border border-gray-200 rounded-xl p-4 hover:border-orange-300 transition">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">{post.jobTitle}</h3>
+                      <p className="text-sm text-gray-500">{post.location}</p>
+                    </div>
+                    <span
+                      className={`px-3 py-1 text-xs font-semibold rounded-full ${
+                        post.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-700'
+                      }`}
+                    >
+                      {post.status}
+                    </span>
                   </div>
-                  <span className="ml-4 text-gray-700 group-hover:text-gray-900 transition-colors duration-200">
-                    {feature}
-                  </span>
+                  <p className="mt-3 text-sm text-gray-600 line-clamp-3">
+                    {post.description || 'No overview provided.'}
+                  </p>
+                  {post.analyticsSnapshot?.topSkills?.length ? (
+                    <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                      {post.analyticsSnapshot.topSkills.map((item) => (
+                        <span key={item.skill} className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full">
+                          {item.skill}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
+                  <p className="mt-3 text-xs text-gray-400">
+                    Posted {new Date(post.createdAt).toLocaleDateString()} • Updated {new Date(post.updatedAt).toLocaleDateString()}
+                  </p>
                 </li>
               ))}
             </ul>
-          </div>
-        </div>
-
-        {/* Coming Soon Section */}
-        <div className="mt-8 bg-gradient-to-r from-orange-600 to-red-600 rounded-xl shadow-lg p-8 text-white">
-          <div className="text-center">
-            <h3 className="text-2xl font-bold mb-4">Coming Soon</h3>
-            <p className="text-orange-100 mb-6 max-w-2xl mx-auto">
-              Attract the best candidates with professionally crafted job descriptions.
-              Our intelligent job post creator is launching soon.
-            </p>
-            <button className="bg-white text-orange-600 px-8 py-3 rounded-lg font-semibold hover:bg-orange-50 transition-all duration-300 hover:shadow-lg transform hover:-translate-y-0.5">
-              Notify Me When Available
-            </button>
-          </div>
-        </div>
-      </div>
+          )}
+        </aside>
+      </section>
     </div>
   );
 };
