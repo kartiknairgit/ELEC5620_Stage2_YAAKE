@@ -19,6 +19,7 @@ const uc7Routes = require('./routes/uc7-mockInterview');
 const coursesRoutes = require('./routes/coursesRoutes');
 const outreachRoutes = require('./routes/outreachRoutes');
 const questionRoutes = require('./routes/questionRoutes');
+const recommenderRoutes = require('./routes/recommenderRoutes');
 
 const atsRoutes = require('./routes/atsRoutes');
 const scheduleRoutes = require('./routes/scheduleRoutes');
@@ -62,6 +63,7 @@ app.use('/api/outreach', outreachRoutes);
 app.use('/api/questions', questionRoutes);
 app.use('/api/ats', atsRoutes);
 app.use('/api/schedule', scheduleRoutes);
+app.use('/api/recommender', recommenderRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
