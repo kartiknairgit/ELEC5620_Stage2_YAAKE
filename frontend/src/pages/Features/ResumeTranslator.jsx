@@ -71,7 +71,7 @@ const ResumeTranslator = () => {
     if (pdfUrl) { URL.revokeObjectURL(pdfUrl); setPdfUrl(null); }
     if (translatedUrl) { URL.revokeObjectURL(translatedUrl); setTranslatedUrl(null); setTranslatedFilename(''); }
 
-  if (!selectedFile) { setError('Please select a PDF or DOCX file'); return; }
+    if (!selectedFile) { setError('Please select a PDF or DOCX file'); return; }
 
     setUploading(true);
     setUploadProgress(0);
@@ -79,11 +79,12 @@ const ResumeTranslator = () => {
     try {
       const ext = selectedFile.name?.toLowerCase().split('.').pop();
       if (ext === 'pdf' || selectedFile.type === 'application/pdf') {
+        // show loading placeholder in the preview area while we wait for the server
+        setPdfLoading(true);
         const resp = await resumesAPI.translateResumePdf(selectedFile, targetLanguage, (p) => setUploadProgress(p));
         const blob = new Blob([resp.data], { type: 'application/pdf' });
         const url = URL.createObjectURL(blob);
         setPdfUrl(url);
-        setPdfLoading(true);
         setTranslatedUrl(url);
         setTranslatedFilename(`translated_resume_${targetLanguage.replace(/\s+/g,'_')}.pdf`);
         setTranslatedMime('application/pdf');
@@ -100,6 +101,8 @@ const ResumeTranslator = () => {
     } catch (err) {
       console.error('Translate error:', err);
       setError(err.response?.data?.message || err.message || 'Translation failed');
+      // ensure loading overlay is removed on failure
+      setPdfLoading(false);
     } finally {
       setUploading(false);
     }
@@ -120,7 +123,7 @@ const ResumeTranslator = () => {
     }
   };
 
-  const handleChangeFile = () => { try { fileInputRef.current.value = ''; } catch(e){}; fileInputRef.current?.click(); };
+  // helper to open file picker (use inline where needed)
 
   // additional state for generic translated file
   const [translatedUrl, setTranslatedUrl] = useState(null);
@@ -130,35 +133,47 @@ const ResumeTranslator = () => {
   return (
     <div className="min-h-full bg-gradient-to-br from-gray-50 to-gray-100 p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-6">
-          <div className="inline-block px-4 py-1 bg-cyan-100 text-cyan-700 text-sm font-semibold rounded-full mb-4">Use Case 8 (UC8)</div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Resume Translator</h1>
-          <p className="text-gray-600 max-w-3xl">Upload a resume (PDF or DOCX) and translate it to another language while preserving layout when possible.</p>
+        <div className="mb-8">
+          <div className="inline-block px-4 py-1 bg-indigo-100 text-indigo-700 text-sm font-semibold rounded-full mb-4">Use Case 8 (UC8)</div>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Resume Translator</h1>
+          <p className="text-lg text-gray-600 max-w-3xl">Upload a resume (PDF or DOCX) and translate it to another language. For PDFs we provide a plain translated PDF; DOCX downloads are supported.</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="bg-white rounded-xl shadow-lg p-8">
-            <h2 className="text-2xl font-bold mb-4">Upload & Translate</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Upload & Translate</h2>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Resume File (PDF or DOCX) *</label>
-                <div onDragEnter={handleDrag} onDragOver={handleDrag} onDragLeave={handleDrag} onDrop={handleDrop} className={`border-2 border-dashed rounded-lg p-6 text-center ${dragActive ? 'border-cyan-500 bg-cyan-50' : ''}`}>
+                <div
+                  className={`border-2 border-dashed rounded-lg p-8 text-center transition-all duration-200 ${
+                    dragActive ? 'border-indigo-500 bg-indigo-50' : 'border-gray-300 hover:border-indigo-400'
+                  }`}
+                  onDragEnter={handleDrag}
+                  onDragLeave={handleDrag}
+                  onDragOver={handleDrag}
+                  onDrop={handleDrop}
+                >
                   <input ref={fileInputRef} type="file" accept=".pdf,.docx" onChange={handleFileChange} className="hidden" />
-                  <div className="space-y-2">
+                  <div className="space-y-3">
+                    <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                      <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
                     {selectedFile ? (
-                      <div className="text-sm flex items-center justify-between">
-                        <div>
-                          <p className="font-semibold text-indigo-600">{selectedFile.name}</p>
-                          <p className="text-gray-500">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <button type="button" onClick={handleChangeFile} className="text-indigo-600 font-semibold">Change file</button>
-                        </div>
+                      <div className="text-sm">
+                        <p className="font-semibold text-indigo-600">{selectedFile.name}</p>
+                        <p className="text-gray-500">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
                       </div>
                     ) : (
                       <>
                         <p className="text-gray-600">Drag and drop your file here, or</p>
-                        <button type="button" onClick={() => fileInputRef.current?.click()} className="text-indigo-600 font-semibold">browse files</button>
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="text-indigo-600 font-semibold hover:text-indigo-700"
+                        >
+                          browse files
+                        </button>
                       </>
                     )}
                   </div>
@@ -175,39 +190,94 @@ const ResumeTranslator = () => {
               {error && (<div className="bg-red-50 border-l-4 border-red-500 p-4 rounded"><p className="text-red-800 text-sm font-medium">{error}</p></div>)}
 
               {uploading && (
-                <div>
-                  <div className="flex justify-between text-sm text-gray-600"><span>Translating...</span><span>{uploadProgress}%</span></div>
-                  <div className="w-full bg-gray-200 rounded-full h-2 mt-2"><div className="bg-cyan-600 h-2 rounded-full transition-all" style={{ width: `${uploadProgress}%` }} /></div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm text-gray-600">
+                    <span>Translating...</span>
+                    <span>{uploadProgress}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="bg-indigo-600 h-2 rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
+                  </div>
                 </div>
               )}
 
-              <button type="submit" disabled={uploading || !selectedFile} className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-bold py-3 px-6 rounded-lg disabled:opacity-50">{uploading ? 'Translating...' : 'Translate Resume'}</button>
+              <button type="submit" disabled={uploading || !selectedFile} className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-4 px-6 rounded-lg hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg">
+                {uploading ? 'Translating...' : 'Translate Resume'}
+              </button>
             </form>
           </div>
 
           <div>
-            <div className="bg-white rounded-xl shadow-lg p-8 min-h-[300px]">
-              <h3 className="text-2xl font-bold mb-4">Translated Resume</h3>
-              {!translatedUrl ? (
-                <div className="text-gray-600">Translated file will appear here after translation. You can download it once ready.</div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="flex gap-3">
-                    <button onClick={downloadTranslated} disabled={busyDownload || !translatedUrl} className="bg-cyan-600 text-white px-4 py-2 rounded">{busyDownload ? 'Downloading...' : (translatedMime?.includes('pdf') ? 'Download PDF' : 'Download DOCX')}</button>
-                    <button onClick={() => { if (translatedUrl) { URL.revokeObjectURL(translatedUrl); setTranslatedUrl(null); setTranslatedFilename(''); } setSelectedFile(null); setError(''); setPdfUrl(null); }} className="ml-auto bg-white border px-4 py-2 rounded">Reset</button>
-                  </div>
-
-                  {translatedMime?.includes('pdf') ? (
-                    <div className="relative border border-gray-200 rounded overflow-hidden" style={{ height: '60vh' }}>
-                      {pdfLoading && (<div className="absolute inset-0 bg-white/75 flex items-center justify-center z-10"><svg className="w-12 h-12 text-cyan-600 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg></div>)}
-                      <iframe title="Translated PDF" src={translatedUrl} className="w-full h-full" onLoad={() => setPdfLoading(false)} />
+            {!translatedUrl ? (
+              <div className="bg-white rounded-xl shadow-lg p-8">
+                <h3 className="text-2xl font-bold text-gray-900 mb-6">How It Works</h3>
+                <div className="space-y-6">
+                  <div className="flex items-start space-x-4">
+                    <div className="flex-shrink-0 w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
+                      <span className="text-indigo-600 font-bold">1</span>
                     </div>
-                  ) : (
-                    <div className="text-gray-700">The translated DOCX is ready — use the Download button above to save it to your computer.</div>
-                  )}
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-1">Upload Resume</h4>
+                      <p className="text-gray-600 text-sm">Upload your resume in PDF or DOCX format.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start space-x-4">
+                    <div className="flex-shrink-0 w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
+                      <span className="text-indigo-600 font-bold">2</span>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-1">Choose Language</h4>
+                      <p className="text-gray-600 text-sm">Select the target language for translation.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start space-x-4">
+                    <div className="flex-shrink-0 w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
+                      <span className="text-indigo-600 font-bold">3</span>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-1">Receive Translated File</h4>
+                      <p className="text-gray-600 text-sm">We return a translated PDF (plain layout) or a DOCX download.</p>
+                    </div>
+                  </div>
                 </div>
-              )}
-            </div>
+
+                <div className="mt-8 pt-8 border-t border-gray-200">
+                  <h4 className="font-semibold text-gray-900 mb-4">Features</h4>
+                  <div className="space-y-3 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">PDF Translation</span>
+                      <span className="font-semibold text-indigo-600">Plain PDF</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">DOCX Translation</span>
+                      <span className="font-semibold text-indigo-600">Download</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">File Size Limit</span>
+                      <span className="font-semibold text-indigo-600">20 MB</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                <div className="flex gap-3">
+                  <button onClick={downloadTranslated} disabled={busyDownload || !translatedUrl} className="bg-indigo-600 text-white px-4 py-2 rounded">{busyDownload ? 'Downloading...' : (translatedMime?.includes('pdf') ? 'Download PDF' : 'Download DOCX')}</button>
+                  <button onClick={() => { if (translatedUrl) { URL.revokeObjectURL(translatedUrl); setTranslatedUrl(null); setTranslatedFilename(''); } setSelectedFile(null); setError(''); setPdfUrl(null); }} className="ml-auto bg-white border px-4 py-2 rounded">Reset</button>
+                </div>
+
+                {translatedMime?.includes('pdf') ? (
+                  <div className="relative border border-gray-200 rounded overflow-hidden bg-white" style={{ height: '60vh' }}>
+                    {pdfLoading && (<div className="absolute inset-0 bg-white/75 flex items-center justify-center z-10"><svg className="w-12 h-12 text-indigo-600 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path></svg></div>)}
+                    <iframe title="Translated PDF" src={translatedUrl} className="w-full h-full" onLoad={() => setPdfLoading(false)} />
+                  </div>
+                ) : (
+                  <div className="bg-white rounded-xl shadow-sm p-6">
+                    <p className="text-gray-700">The translated DOCX is ready — use the Download button above to save it to your computer.</p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

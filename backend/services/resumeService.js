@@ -252,6 +252,7 @@ ${section}`;
 
       // Step 3: Create formatted PDF
       console.log("📝 Generating formatted PDF...");
+      console.log(translatedText);
       const pdfBuffer = await this.createFormattedPDF(translatedText);
 
       console.log(`✅ Translation complete (${pdfBuffer.length} bytes)`);
