@@ -5,12 +5,12 @@ import { authAPI } from "../services/api";
 // Import all feature pages
 import ResumeATS from "./Features/ResumeATS";
 import CoverLetterGenerator from "./Features/CoverLetterGenerator";
-import DraftEditor from "./Features/DraftEditor";
-import ExportCenter from "./Features/ExportCenter";
 import ColdOutreach from "./Features/ColdOutreach";
 import MockInterview from "./Features/MockInterview";
 import ResumeTranslator from "./Features/ResumeTranslator";
 import JobPostCreator from "./Features/JobPostCreator";
+import JobPostBoard from "./Features/JobPostBoard";
+import JobMarketInsights from "./Features/JobMarketInsights";
 import SkillsGapAnalysis from "./Features/SkillsGapAnalysis";
 import InterviewQuestionsBank from "./Features/InterviewQuestionsBank";
 import InterviewQuestionGenerator from "./Features/InterviewQuestionGenerator";
@@ -29,21 +29,21 @@ const Dashboard = () => {
   const menuItems = [
     { path: "/dashboard/resume-ats", iconType: "document", label: "Resume ATS Checker", useCase: "UC2", roles: ["applicant", "recruiter"] },
     { path: "/dashboard/cover-letter", iconType: "mail", label: "Cover Letter Generator", useCase: "UC3", roles: ["applicant"] },
-    { path: "/dashboard/draft-editor", iconType: "pencil", label: "Draft Editor", useCase: "UC4", roles: ["applicant"] },
-    { path: "/dashboard/export-center", iconType: "upload", label: "Export Center", useCase: "UC5", roles: ["applicant"] },
     { path: "/dashboard/cold-outreach", iconType: "email", label: "Cold Outreach", useCase: "UC6", roles: ["applicant"] },
     { path: "/dashboard/mock-interview", iconType: "microphone", label: "Mock Interview", useCase: "UC7", roles: ["applicant"] },
     { path: "/dashboard/interview-scheduler", iconType: "calendar", label: "Interview Scheduler", useCase: "Scheduling", roles: ["applicant", "recruiter"] },
     { path: "/dashboard/resume-translator", iconType: "globe", label: "Resume Translator", useCase: "UC8", roles: ["applicant"] },
+    { path: "/dashboard/job-board", iconType: "document", label: "Job Board", useCase: "UC9", roles: ["applicant", "recruiter"] },
     { path: "/dashboard/job-post-creator", iconType: "clipboard", label: "Job Post Creator", useCase: "UC9", roles: ["recruiter"] },
     { path: "/dashboard/skills-gap", iconType: "chart", label: "Skills Gap Analysis", useCase: "UC10", roles: ["applicant"] },
     { path: "/dashboard/interview-questions", iconType: "lightbulb", label: "Interview Questions Bank", useCase: "UC11", roles: ["applicant"] },
     { path: "/dashboard/question-generator", iconType: "lightbulb", label: "Question Generator", useCase: "Recruiter", roles: ["recruiter"] },
     { path: "/dashboard/sample-questions", iconType: "document", label: "Sample Questions", useCase: "Recruiter", roles: ["recruiter"] },
+    { path: "/dashboard/job-market-insights", iconType: "chart", label: "Job Market Insights", useCase: "Career Trainer", roles: ["career_trainer"] },
+    { path: "/dashboard/manage-courses", iconType: "clipboard", label: "Manage Courses", useCase: "UC12", roles: ["career_trainer"] },
   ];
 
   // Compute displayed menu items based on user role (normalize to handle spaces/underscores)
-  const normalizedRole = user?.role ? user.role.toLowerCase().replace(/\s+/g, "_") : null;
   const userRole = user?.role ? user.role.toLowerCase() : null;
 
   // Filter menu items based on user role
@@ -51,10 +51,6 @@ const Dashboard = () => {
     if (!item.roles) return true; // Show items without role restrictions
     return item.roles.includes(userRole);
   });
-
-  if (normalizedRole === "career_trainer") {
-    displayedMenuItems.push({ path: "/dashboard/manage-courses", iconType: "clipboard", label: "Manage Courses", useCase: "UC12" });
-  }
 
   const getIcon = (iconType) => {
     const iconClasses = "w-5 h-5";
@@ -327,12 +323,11 @@ const Dashboard = () => {
             <Route path="/" element={<DashboardHome />} />
             <Route path="/resume-ats" element={<ResumeATS />} />
             <Route path="/cover-letter" element={<CoverLetterGenerator />} />
-            <Route path="/draft-editor" element={<DraftEditor />} />
-            <Route path="/export-center" element={<ExportCenter />} />
             <Route path="/cold-outreach" element={<ColdOutreach />} />
             <Route path="/mock-interview" element={<MockInterview />} />
             <Route path="/interview-scheduler" element={<InterviewScheduler />} />
             <Route path="/resume-translator" element={<ResumeTranslator />} />
+            <Route path="/job-board" element={<JobPostBoard />} />
             <Route path="/job-post-creator" element={<JobPostCreator />} />
             <Route path="/skills-gap" element={<SkillsGapAnalysis />} />
             <Route path="/interview-questions" element={<InterviewQuestionsBank />} />
@@ -343,6 +338,7 @@ const Dashboard = () => {
               <Route path="/sample-questions" element={<SampleQuestions />} />
             ) : null}
             <Route path="/manage-courses" element={<ManageCourses />} />
+            <Route path="/job-market-insights" element={<JobMarketInsights />} />
           </Routes>
         </div>
       </main>

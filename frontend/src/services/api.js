@@ -158,6 +158,37 @@ export const coursesAPI = {
   }
 };
 
+// Job Post API
+export const jobPostAPI = {
+  create: async (payload) => {
+    const response = await api.post('/jobposts', payload);
+    return response.data?.data || null;
+  },
+
+  getMine: async () => {
+    const response = await api.get('/jobposts/mine');
+    return response.data?.data || [];
+  },
+
+  listPublic: async (params = {}) => {
+    const response = await api.get('/jobposts/public', { params });
+    return {
+      posts: response.data?.data || [],
+      pagination: response.data?.pagination || null
+    };
+  },
+
+  getById: async (id) => {
+    const response = await api.get(`/jobposts/${id}`);
+    return response.data?.data || null;
+  },
+
+  getCareerInsights: async (params = {}) => {
+    const response = await api.get('/jobposts/insights/career', { params });
+    return response.data?.data || null;
+  }
+};
+
 // Outreach API
 export const outreachAPI = {
   // Generate new outreach email with AI
