@@ -5,6 +5,7 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const resumeController = require('../controllers/resumeController');
+const { protect } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
@@ -40,7 +41,8 @@ router.get('/health', resumeController.health);
 
 router.get('/test', resumeController.test);
 
-router.post('/parse', upload.single('file'), resumeController.uploadResume);
+router.post('/parse', protect, upload.single('file'), resumeController.uploadResume);
+router.post('/translate/pdf', protect, upload.single('file'), resumeController.translateResumePdf);
 
 router.use((error, req, res, next) => {
   if (error instanceof multer.MulterError) {
