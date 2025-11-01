@@ -132,6 +132,23 @@ const ResumeTranslator = () => {
 
   return (
     <div className="min-h-full bg-gradient-to-br from-gray-50 to-gray-100 p-8">
+      {/* Global overlay while uploading/translating */}
+      {(uploading || pdfLoading) && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-[420px] max-w-[90%] text-center">
+            <svg className="mx-auto mb-4 w-12 h-12 text-indigo-600 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+            </svg>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Translating resume</h3>
+            <p className="text-sm text-gray-600 mb-4">Please wait while we translate and prepare your file.</p>
+            <div className="w-full bg-gray-200 rounded-full h-3">
+              <div className="bg-indigo-600 h-3 rounded-full transition-all" style={{ width: `${uploadProgress}%` }} />
+            </div>
+            <div className="mt-2 text-xs text-gray-500">{uploadProgress}%</div>
+          </div>
+        </div>
+      )}
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <div className="inline-block px-4 py-1 bg-indigo-100 text-indigo-700 text-sm font-semibold rounded-full mb-4">Use Case 8 (UC8)</div>

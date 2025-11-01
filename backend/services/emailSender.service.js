@@ -2,7 +2,7 @@ const { Resend } = require('resend');
 require('dotenv').config();
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM_EMAIL = process.env.OUTREACH_FROM_EMAIL || 'outreach@yaake.com';
+const FROM_EMAIL = process.env.OUTREACH_FROM_EMAIL || 'onboarding@resend.dev';
 
 /**
  * Send email via Resend API
