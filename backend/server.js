@@ -20,6 +20,7 @@ const coursesRoutes = require('./routes/coursesRoutes');
 const outreachRoutes = require('./routes/outreachRoutes');
 const questionRoutes = require('./routes/questionRoutes');
 const jobPostRoutes = require('./routes/jobPostRoutes');
+const recommenderRoutes = require('./routes/recommenderRoutes');
 const atsRoutes = require('./routes/atsRoutes');
 const scheduleRoutes = require('./routes/scheduleRoutes');
 const UserController = require('./controllers/userController');
