@@ -24,7 +24,7 @@ const MockInterview = () => {
         throw new Error('Please login to start the interview');
       }
 
-      const response = await fetch('http://localhost:5002/api/uc7/start', {
+      const response = await fetch('http://localhost:5001/api/uc7/start', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -56,7 +56,7 @@ const MockInterview = () => {
     try {
       const token = localStorage.getItem('yaake_token');
 
-      const response = await fetch('http://localhost:5002/api/uc7/finish', {
+      const response = await fetch('http://localhost:5001/api/uc7/finish', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
