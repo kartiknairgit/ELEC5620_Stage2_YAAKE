@@ -305,6 +305,14 @@ export const exportAPI = {
   }
 };
 
+// Learning Recommender API
+export const learningAPI = {
+  learningPath: async ({ resumeText, jobDescription, targetRole }) => {
+    const response = await api.post('/recommender/learning-path', { resumeText, jobDescription, targetRole });
+    return response.data?.data || null;
+  }
+};
+
 // Interview Question Generator API (for recruiters)
 export const questionAPI = {
   // Generate new question set with AI

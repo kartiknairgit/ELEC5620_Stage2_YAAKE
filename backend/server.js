@@ -63,6 +63,7 @@ app.use('/api/questions', questionRoutes);
 app.use('/api/jobposts', jobPostRoutes);
 app.use('/api/ats', atsRoutes);
 app.use('/api/schedule', scheduleRoutes);
+app.use('/api/recommender', recommenderRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
