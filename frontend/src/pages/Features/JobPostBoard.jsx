@@ -313,12 +313,27 @@ const JobPostBoard = () => {
               )}
 
               <footer className="border-t border-gray-100 pt-6 flex flex-wrap gap-3 text-sm">
-                <button className="px-4 py-2 rounded-lg border border-indigo-200 text-indigo-600 hover:bg-indigo-50">
-                  Save for later
-                </button>
-                <button className="px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700">
-                  Apply Now
-                </button>
+                {selectedPost.applicationLink ? (
+                  <a
+                    href={selectedPost.applicationLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-6 py-3 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg inline-flex items-center gap-2"
+                  >
+                    Apply Now
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
+                ) : (
+                  <button
+                    disabled
+                    className="px-6 py-3 rounded-lg bg-gray-400 text-white font-semibold cursor-not-allowed opacity-60"
+                    title="No application link provided by recruiter"
+                  >
+                    Apply Now (Link Not Available)
+                  </button>
+                )}
               </footer>
             </article>
           ) : (

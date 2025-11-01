@@ -78,6 +78,10 @@ const jobPostSchema = new mongoose.Schema(
       set: sanitizeStringArray,
       default: []
     },
+    applicationLink: {
+      type: String,
+      trim: true
+    },
     status: {
       type: String,
       enum: ['draft', 'published'],

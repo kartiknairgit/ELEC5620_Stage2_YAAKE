@@ -14,6 +14,7 @@ const defaultForm = {
   responsibilities: '',
   requiredSkills: '',
   tags: '',
+  applicationLink: '',
   status: 'published'
 };
 
@@ -327,6 +328,19 @@ const JobPostCreator = () => {
               className="mt-2 w-full rounded-lg border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
               placeholder="frontend, leadership, hybrid"
             />
+          </div>
+
+          <div>
+            <label className="text-sm font-semibold text-gray-700">Application Link (Course/External Form URL)</label>
+            <input
+              type="url"
+              name="applicationLink"
+              value={form.applicationLink}
+              onChange={handleChange}
+              className="mt-2 w-full rounded-lg border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              placeholder="https://example.com/apply or course link"
+            />
+            <p className="mt-1 text-xs text-gray-500">Where should applicants go when they click "Apply Now"?</p>
           </div>
 
           {alert.message && (
