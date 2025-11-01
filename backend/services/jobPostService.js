@@ -34,6 +34,7 @@ class JobPostService {
       responsibilities: this.sanitizeList(payload.responsibilities),
       requiredSkills: this.sanitizeList(payload.requiredSkills),
       tags: this.sanitizeList(payload.tags),
+      applicationLink: payload.applicationLink,
       status: payload.status || 'published'
     };
 
